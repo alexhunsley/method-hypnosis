@@ -3,6 +3,25 @@
 #include <LiquidCrystal_I2C.h>
 #include <Encoder.h>
 
+byte smiley[8] = {
+  B00000,
+  B01010,
+  B00000,
+  B00000,
+  B10001,
+  B01110,
+  B00000,
+};
+
+byte bell[8] = {
+  B00000,
+  B00100,
+  B01110,
+  B01110,
+  B01110,
+  B11111,
+  B00100,
+};
 
 // LCD and encoder setup
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -44,17 +63,18 @@ MenuItem submenu2Items[] = {
 };
 
 // ---- Now define the actual submenus (after the arrays exist) ----
-Menu submenu1 = {"Method", submenu1Items, ARRAY_LEN(submenu1Items)};
+Menu submenu1 = {"Method:", submenu1Items, ARRAY_LEN(submenu1Items)};
 Menu submenu2 = {"Brightness", submenu2Items, ARRAY_LEN(submenu2Items)};
 
 // ---- Now define main menu items (using the submenus above) ----
+char mainTitle[] = {'M', 'e', 't', 'h', 'o', 'd', ' ', 'h', 'y', 'p', 'n', 'o', 's', 'i', 's', '\1'};
 MenuItem mainMenuItems[] = {
-  {"Method", &submenu1},
+  {"Choose method", &submenu1},
   {"Brightness", &submenu2}
 };
 
 // ---- And the main menu ----
-Menu mainMenu = {"Main Menu", mainMenuItems, ARRAY_LEN(mainMenuItems)};
+Menu mainMenu = {mainTitle, mainMenuItems, ARRAY_LEN(mainMenuItems)};
 
 // State
 Menu* currentMenu = &mainMenu;
@@ -67,6 +87,7 @@ bool buttonPressed = false;
 void updateMenuDisplay() {
   lcd.clear();
   lcd.setCursor(0, 0);
+  // lcd.write((uint8_t)1); // to add bell char
   lcd.print(currentMenu->title);
   lcd.setCursor(0, 1);
   lcd.print("> ");
@@ -86,6 +107,8 @@ bool displayIsOff = false;
 // returns true if the display woke up (might use this to ignore this activity for usability reasons)
 bool registerActivity() {
   lastActivityTime = millis();
+  // reset sleep message timer (in case sleep msg showing when user interacts)
+  sleepMessageStart = 0;
   if (!displayIsOff) {
     return false;
   }
@@ -130,6 +153,10 @@ void start_menu() {
   lcd.init();
   lcd.backlight();
   pinMode(buttonPin, INPUT_PULLUP);
+
+  lcd.createChar(0, smiley);
+  lcd.createChar(1, bell);
+
   encoder.write(0);
   updateMenuDisplay();
   lastActivityTime = millis();
