@@ -28,10 +28,6 @@ const uint8_t y_points[] = { 7, 6, 5, 4, 5, 6, 7, 7, 6, 7, 6, 7, 7, 6, 7, 6, 5, 
 // little test pattern:
 // const uint8_t y_points[] = { 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4 };
 
-void setBrightness(int b) {
-  mx.control(MD_MAX72XX::INTENSITY, b);
-}
-
 void setup() {
   Serial.begin(9600);
   Serial.println("Serial started...");
@@ -43,11 +39,19 @@ void setup() {
 }
 
 size_t y_points_len = sizeof(y_points) / sizeof(y_points[0]);
-int sleep_time = 32;
+int sleep_time = 30;
 int pause_leadend_counter = 0;
 int leadend_pause = 1000;
 
 int method_part = 0;
+
+void setBrightness(int b) {
+  mx.control(MD_MAX72XX::INTENSITY, b);
+}
+
+void setSpeed(int s) {
+  sleep_time = s;
+}
 
 void loop() {
   loop_menu();

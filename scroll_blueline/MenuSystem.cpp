@@ -27,7 +27,10 @@ byte bell[8] = {
   B00100,
 };
 
+int tick_duration = 50;
+
 extern void setBrightness(int b);
+extern void setSpeed(int s);
 
 int lcdBrightness = 5;
 
@@ -81,6 +84,7 @@ Menu submenu1 = {"Method:", submenu1Items, ARRAY_LEN(submenu1Items)};
 char mainTitle[] = {'M', 'e', 't', 'h', 'o', 'd', ' ', 'h', 'y', 'p', 'n', 'o', 's', 'i', 's', '\1'};
 MenuItem mainMenuItems[] = {
   {"Choose method", &submenu1},
+  {"Speed", nullptr},
   // null means a leaf screen with non-menu handling
   {"Brightness", nullptr}
 };
@@ -106,6 +110,12 @@ void updateMenuDisplay() {
       lcd.setCursor(0, 1);
       lcd.print("       ");
       lcd.print(lcdBrightness);
+    }
+    else if (leafScreenName == "Speed") {
+      lcd.print("   Scroll speed");
+      lcd.setCursor(0, 1);
+      lcd.print("       ");
+      lcd.print(tick_duration);
     }
     return;
   }
@@ -235,9 +245,14 @@ void loop_menu() {
 
       // leaf screen?
       if (leafScreenName == "Brightness") {
-        lcdBrightness = lcdBrightness + lastRotaryPosition - newRotaryPosition;
+        lcdBrightness += lastRotaryPosition - newRotaryPosition;
         lcdBrightness = max(min(lcdBrightness, 15), 0);
         setBrightness(lcdBrightness);
+      }
+      else if (leafScreenName == "Speed") {
+        tick_duration += (lastRotaryPosition - newRotaryPosition) * 5;
+        tick_duration = max(min(tick_duration, 200), 0);
+        setSpeed(tick_duration);
       }
       else {
         int menuCount = currentMenu->itemCount;
@@ -271,6 +286,4 @@ void loop_menu() {
   } else if (digitalRead(buttonPin) == HIGH) {
     buttonPressed = false;
   }
-
-  delay(50);
 }
