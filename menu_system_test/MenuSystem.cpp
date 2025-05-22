@@ -11,33 +11,6 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 Encoder encoder(2, 3);
 const int buttonPin = 4;
 
-
-///////////////////////////////////////////////
-// LCD display sleep
-unsigned long lastActivityTime = 0;
-const unsigned long inactivityTimeout = 5000; // 60 seconds
-const unsigned long sleepMessageDuration = 500;
-unsigned long sleepMessageStart = 0;
-String sleepMessage = "Sleeping...";
-
-bool displayIsOff = false;
-
-// returns true if the display woke up (might use this to ignore this activity for usability reasons)
-bool registerActivity() {
-  lastActivityTime = millis();
-  if (!displayIsOff) {
-    return false;
-  }
-
-  displayIsOff = false;
-  lcd.display();  // Wake up display
-  lcd.backlight();
-  Serial.println("<< WOKE DISPLAY >>");
-  return true;
-}
-///////////////////////////////////////////////
-
-
 // Menu system definitions
 struct Menu;
 
@@ -99,6 +72,31 @@ void updateMenuDisplay() {
   lcd.print("> ");
   lcd.print(currentMenu->items[currentItem].label);
 }
+
+///////////////////////////////////////////////
+// LCD display sleep
+unsigned long lastActivityTime = 0;
+const unsigned long inactivityTimeout = 5000; // 60 seconds
+const unsigned long sleepMessageDuration = 2000;
+unsigned long sleepMessageStart = 0;
+const String sleepMessage = "  Sleeping...";
+
+bool displayIsOff = false;
+
+// returns true if the display woke up (might use this to ignore this activity for usability reasons)
+bool registerActivity() {
+  lastActivityTime = millis();
+  if (!displayIsOff) {
+    return false;
+  }
+  displayIsOff = false;
+  updateMenuDisplay();
+  lcd.display();  // Wake up display
+  lcd.backlight();
+  Serial.println("<< WOKE DISPLAY >>");
+  return true;
+}
+///////////////////////////////////////////////
 
 void handleSelection() {
   if (registerActivity()) {
@@ -167,13 +165,20 @@ void loop_menu() {
     Serial.println(currentItem);
   }
 
-  if (!displayIsOff && millis() - lastActivityTime > inactivityTimeout) {
+  if (!displayIsOff && sleepMessageStart == 0 && millis() - lastActivityTime > inactivityTimeout) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(sleepMessage);
+    sleepMessageStart = millis();
+    Serial.println("<< DISPLAY about to sleep... >>");
+  }
+  if (sleepMessageStart > 0 && millis() - sleepMessageStart > sleepMessageDuration) {
+    sleepMessageStart = 0;
     displayIsOff = true;
     lcd.noBacklight();
     lcd.noDisplay();
     Serial.println("<< DISPLAY SLEPT >>");
   }
-
   if (digitalRead(buttonPin) == LOW && !buttonPressed) {
     buttonPressed = true;
     handleSelection();
