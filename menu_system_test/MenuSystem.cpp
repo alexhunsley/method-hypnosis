@@ -45,6 +45,8 @@ struct Menu {
   const char* title;
   MenuItem* items;
   int itemCount;
+  // for restoring when we come out a submenu
+  int activeItem;
 };
 
 // ---- Forward declarations of the submenu Menu structs ----
@@ -81,7 +83,7 @@ Menu* currentMenu = &mainMenu;
 Menu* parentMenus[5];
 int menuDepth = 0;
 int currentItem = 0;
-int lastPosition = 0;
+int lastRotaryPosition = 0;
 bool buttonPressed = false;
 
 void updateMenuDisplay() {
@@ -131,21 +133,26 @@ void handleSelection() {
 
   if (strcmp(selected->label, "Back") == 0 && menuDepth > 0) {
     currentMenu = parentMenus[--menuDepth];
+    currentItem = currentMenu->activeItem;
+    Serial.print("Back out a menu, restored currentItem = ");
+    Serial.println(currentItem);
   } else if (selected->submenu) {
     parentMenus[menuDepth++] = currentMenu;
+    currentMenu->activeItem = currentItem;
     currentMenu = selected->submenu;
+    currentItem = 0;
   } else {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Selected:");
     lcd.setCursor(0, 1);
     lcd.print(selected->label);
+    // TODO this is not good! but is temp code, anyway
     delay(1000);
   }
 
   encoder.write(0);
-  currentItem = 0;
-  lastPosition = -1;
+  lastRotaryPosition = currentItem;
   updateMenuDisplay();
 }
 
@@ -166,26 +173,33 @@ int debug_tick = 0;
 
 void loop_menu() {
   // encoder.tick();
-  long newPosition = encoder.read() / 4;  // divide by 4 to debounce steps
+  long newRotaryPosition = encoder.read() / 4;  // divide by 4 to debounce steps
 
   // if (debug_tick == 0) {
-  //   Serial.println(newPosition); 
+  //   Serial.println(newRotaryPosition); 
   // }
   // debug_tick = (debug_tick + 1) % 10;
 
-  if (newPosition != lastPosition) {
+  if (newRotaryPosition != lastRotaryPosition) {
+    Serial.print(">>>>>>> Change in pos detected: ");
+    Serial.print(lastRotaryPosition);
+    Serial.print(" to ");
+    Serial.println(newRotaryPosition);
+
     if (registerActivity()) {
       // ignore selection if display was woken up
       return;
     }
 
     int menuCount = currentMenu->itemCount;
-    if (newPosition > lastPosition) {
-      currentItem = (currentItem + 1) % menuCount;
-    } else {
-      currentItem = (currentItem - 1 + menuCount) % menuCount;
+    if (lastRotaryPosition >= 0) {
+      if (newRotaryPosition > lastRotaryPosition) {
+        currentItem = (currentItem + 1) % menuCount;
+      } else {
+        currentItem = (currentItem - 1 + menuCount) % menuCount;
+      }
     }
-    lastPosition = newPosition;
+    lastRotaryPosition = newRotaryPosition;
     updateMenuDisplay();
 
     Serial.print("Item: ");
