@@ -86,6 +86,9 @@ int currentMenuIndex = 0;
 int lastRotaryPosition = 0;
 bool buttonPressed = false;
 
+// unsigned long rotaryDebounceStartTime = 0;
+// unsigned long rotaryDebounceDuration = 100;
+
 void updateMenuDisplay() {
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -151,8 +154,9 @@ void handleSelection() {
     delay(1000);
   }
 
-  encoder.write(0);
-  lastRotaryPosition = 0;
+  // does this need doing at all? try without
+  // encoder.write(0);
+  // lastRotaryPosition = 0;
   updateMenuDisplay();
 }
 
@@ -173,38 +177,44 @@ int debug_tick = 0;
 
 void loop_menu() {
   // encoder.tick();
-  long newRotaryPosition = encoder.read() / 4;  // divide by 4 to debounce steps
 
-  // if (debug_tick == 0) {
-  //   Serial.println(newRotaryPosition); 
-  // }
-  // debug_tick = (debug_tick + 1) % 10;
+// think the lib will handle this?
+  // unsigned long rotaryDebounceStartTime = 0;
+  // unsigned long rotaryDebounceDuration = 100;
+  // if (rotaryDebounceStartTime == 0 || (millis() - rotaryDebounceStartTime >= rotaryDebounceDuration)) {
+    // rotaryDebounceStartTime = millis();
 
-  if (newRotaryPosition != lastRotaryPosition) {
-    Serial.print(">>>>>>> Change in pos detected: ");
-    Serial.print(lastRotaryPosition);
-    Serial.print(" to ");
-    Serial.println(newRotaryPosition);
+    long newRotaryPosition = encoder.read() / 4;  // divide by 4 to debounce steps
 
-    if (registerActivity()) {
-      // ignore selection if display was woken up
-      return;
-    }
+    // if (debug_tick == 0) {
+    //   Serial.println(newRotaryPosition); 
+    // }
+    // debug_tick = (debug_tick + 1) % 10;
 
-    int menuCount = currentMenu->itemCount;
-    if (lastRotaryPosition >= 0) {
+    if (newRotaryPosition != lastRotaryPosition) {
+      Serial.print(">>>>>>> Change in pos detected: ");
+      Serial.print(lastRotaryPosition);
+      Serial.print(" to ");
+      Serial.println(newRotaryPosition);
+
+      if (registerActivity()) {
+        // ignore selection if display was woken up
+        return;
+      }
+
+      int menuCount = currentMenu->itemCount;
       if (newRotaryPosition > lastRotaryPosition) {
         currentMenuIndex = (currentMenuIndex + 1) % menuCount;
       } else {
         currentMenuIndex = (currentMenuIndex - 1 + menuCount) % menuCount;
       }
-    }
-    lastRotaryPosition = newRotaryPosition;
-    updateMenuDisplay();
+      lastRotaryPosition = newRotaryPosition;
+      updateMenuDisplay();
 
-    Serial.print("Item: ");
-    Serial.println(currentMenuIndex);
-  }
+      Serial.print("Item: ");
+      Serial.println(currentMenuIndex);
+    }
+  // }
 
   if (!displayIsOff && sleepMessageStart == 0 && millis() - lastActivityTime > inactivityTimeout) {
     lcd.clear();
