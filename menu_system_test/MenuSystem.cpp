@@ -152,7 +152,7 @@ void handleSelection() {
   }
 
   encoder.write(0);
-  lastRotaryPosition = currentMenuIndex;
+  lastRotaryPosition = 0;
   updateMenuDisplay();
 }
 
