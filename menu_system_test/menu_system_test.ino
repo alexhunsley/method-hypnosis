@@ -4,7 +4,6 @@
 
 #include <MD_MAX72xx.h>
 
-
 #define MAX_DEVICES 4
 #define CS_PIN 10
 

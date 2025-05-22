@@ -6,4 +6,6 @@
 void start_menu();
 void loop_menu();
 
+#define ARRAY_LEN(x) (sizeof(x) / sizeof((x)[0]))
+
 #endif
