@@ -82,7 +82,7 @@ Menu mainMenu = {mainTitle, mainMenuItems, ARRAY_LEN(mainMenuItems)};
 Menu* currentMenu = &mainMenu;
 Menu* parentMenus[5];
 int menuDepth = 0;
-int currentItem = 0;
+int currentMenuIndex = 0;
 int lastRotaryPosition = 0;
 bool buttonPressed = false;
 
@@ -93,7 +93,7 @@ void updateMenuDisplay() {
   lcd.print(currentMenu->title);
   lcd.setCursor(0, 1);
   lcd.print("> ");
-  lcd.print(currentMenu->items[currentItem].label);
+  lcd.print(currentMenu->items[currentMenuIndex].label);
 }
 
 ///////////////////////////////////////////////
@@ -129,18 +129,18 @@ void handleSelection() {
     return;
   }
 
-  MenuItem* selected = &currentMenu->items[currentItem];
+  MenuItem* selected = &currentMenu->items[currentMenuIndex];
 
   if (strcmp(selected->label, "Back") == 0 && menuDepth > 0) {
     currentMenu = parentMenus[--menuDepth];
-    currentItem = currentMenu->activeItem;
-    Serial.print("Back out a menu, restored currentItem = ");
-    Serial.println(currentItem);
+    currentMenuIndex = currentMenu->activeItem;
+    Serial.print("Back out a menu, restored currentMenuIndex = ");
+    Serial.println(currentMenuIndex);
   } else if (selected->submenu) {
     parentMenus[menuDepth++] = currentMenu;
-    currentMenu->activeItem = currentItem;
+    currentMenu->activeItem = currentMenuIndex;
     currentMenu = selected->submenu;
-    currentItem = 0;
+    currentMenuIndex = 0;
   } else {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -152,7 +152,7 @@ void handleSelection() {
   }
 
   encoder.write(0);
-  lastRotaryPosition = currentItem;
+  lastRotaryPosition = currentMenuIndex;
   updateMenuDisplay();
 }
 
@@ -194,16 +194,16 @@ void loop_menu() {
     int menuCount = currentMenu->itemCount;
     if (lastRotaryPosition >= 0) {
       if (newRotaryPosition > lastRotaryPosition) {
-        currentItem = (currentItem + 1) % menuCount;
+        currentMenuIndex = (currentMenuIndex + 1) % menuCount;
       } else {
-        currentItem = (currentItem - 1 + menuCount) % menuCount;
+        currentMenuIndex = (currentMenuIndex - 1 + menuCount) % menuCount;
       }
     }
     lastRotaryPosition = newRotaryPosition;
     updateMenuDisplay();
 
     Serial.print("Item: ");
-    Serial.println(currentItem);
+    Serial.println(currentMenuIndex);
   }
 
   if (!displayIsOff && sleepMessageStart == 0 && millis() - lastActivityTime > inactivityTimeout) {
