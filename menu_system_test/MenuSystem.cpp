@@ -29,12 +29,6 @@ struct Menu {
 extern Menu submenu1;
 extern Menu submenu2;
 
-// ---- Now define main menu items (using the submenus above) ----
-MenuItem mainMenuItems[] = {
-  {"Method", &submenu1},
-  {"Brightness", &submenu2},
-};
-
 // ---- Now define submenu items ----
 MenuItem submenu1Items[] = {
   {"Bristol", nullptr},
@@ -52,6 +46,12 @@ MenuItem submenu2Items[] = {
 Menu submenu1 = {"Method", submenu1Items, ARRAY_LEN(submenu1Items)};
 Menu submenu2 = {"Brightness", submenu2Items, ARRAY_LEN(submenu2Items)};
 
+// ---- Now define main menu items (using the submenus above) ----
+MenuItem mainMenuItems[] = {
+  {"Method", &submenu1},
+  {"Brightness", &submenu2}
+};
+
 // ---- And the main menu ----
 Menu mainMenu = {"Main Menu", mainMenuItems, ARRAY_LEN(mainMenuItems)};
 
@@ -60,7 +60,7 @@ Menu* currentMenu = &mainMenu;
 Menu* parentMenus[5];
 int menuDepth = 0;
 int currentItem = 0;
-int lastPosition = -1;
+int lastPosition = 0;
 bool buttonPressed = false;
 
 void updateMenuDisplay() {
@@ -112,7 +112,7 @@ void loop_menu() {
   if (debug_tick == 0) {
     Serial.println(newPosition); 
   }
-  debug_tick = (debug_tick + 1) % 20;
+  debug_tick = (debug_tick + 1) % 10;
 
   if (newPosition != lastPosition) {
     int menuCount = currentMenu->itemCount;
