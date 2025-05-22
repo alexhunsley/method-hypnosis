@@ -3,6 +3,9 @@
 #include <LiquidCrystal_I2C.h>
 #include <Encoder.h>
 
+// TO FIX
+// when coming out a sub menu like methods, there's an auto-scroll and the upper menu changes its selection, causing a visual jump
+
 byte smiley[8] = {
   B00000,
   B01010,
@@ -44,7 +47,6 @@ struct Menu {
   int itemCount;
 };
 
-
 // ---- Forward declarations of the submenu Menu structs ----
 extern Menu submenu1;
 extern Menu submenu2;
@@ -73,10 +75,8 @@ MenuItem mainMenuItems[] = {
   {"Brightness", &submenu2}
 };
 
-// ---- And the main menu ----
 Menu mainMenu = {mainTitle, mainMenuItems, ARRAY_LEN(mainMenuItems)};
 
-// State
 Menu* currentMenu = &mainMenu;
 Menu* parentMenus[5];
 int menuDepth = 0;
@@ -97,8 +97,8 @@ void updateMenuDisplay() {
 ///////////////////////////////////////////////
 // LCD display sleep
 unsigned long lastActivityTime = 0;
-const unsigned long inactivityTimeout = 5000; // 60 seconds
-const unsigned long sleepMessageDuration = 2000;
+const unsigned long inactivityTimeout = 30000;
+const unsigned long sleepMessageDuration = 3000;
 unsigned long sleepMessageStart = 0;
 const String sleepMessage = "  Sleeping...";
 
