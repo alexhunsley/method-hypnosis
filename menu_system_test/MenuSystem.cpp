@@ -109,10 +109,10 @@ void loop_menu() {
   // encoder.tick();
   long newPosition = encoder.read() / 4;  // divide by 4 to debounce steps
 
-  if (debug_tick == 0) {
-    Serial.println(newPosition); 
-  }
-  debug_tick = (debug_tick + 1) % 10;
+  // if (debug_tick == 0) {
+  //   Serial.println(newPosition); 
+  // }
+  // debug_tick = (debug_tick + 1) % 10;
 
   if (newPosition != lastPosition) {
     int menuCount = currentMenu->itemCount;
@@ -123,6 +123,8 @@ void loop_menu() {
     }
     lastPosition = newPosition;
     updateMenuDisplay();
+    Serial.print("Item: ");
+    Serial.println(currentItem);
   }
 
   if (digitalRead(buttonPin) == LOW && !buttonPressed) {
