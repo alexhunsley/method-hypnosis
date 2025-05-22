@@ -203,11 +203,8 @@ void loop_menu() {
       }
 
       int menuCount = currentMenu->itemCount;
-      if (newRotaryPosition > lastRotaryPosition) {
-        currentMenuIndex = (currentMenuIndex + 1) % menuCount;
-      } else {
-        currentMenuIndex = (currentMenuIndex - 1 + menuCount) % menuCount;
-      }
+      currentMenuIndex = (currentMenuIndex + lastRotaryPosition - newRotaryPosition + menuCount) % menuCount;
+
       lastRotaryPosition = newRotaryPosition;
       updateMenuDisplay();
 
