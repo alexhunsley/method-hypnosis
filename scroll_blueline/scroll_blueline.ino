@@ -2,9 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
-
-// Set the LCD address (often 0x27 or 0x3F) and dimensions (e.g., 16x2)
-LiquidCrystal_I2C lcd(0x27, 16, 2);  
+#include "MenuSystem.h"
 
 //
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
@@ -31,15 +29,11 @@ const uint8_t y_points[] = { 7, 6, 5, 4, 5, 6, 7, 7, 6, 7, 6, 7, 7, 6, 7, 6, 5, 
 // const uint8_t y_points[] = { 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4 };
 
 void setup() {
+  start_menu();
+
   mx.begin();
   mx.control(MD_MAX72XX::INTENSITY, 1);
   mx.clear();
-
-  // LCD display
-  lcd.init();                      
-  lcd.backlight();    
-  lcd.setCursor(0, 0);              
-  lcd.print("Bristol 8");
 }
 
 size_t y_points_len = sizeof(y_points) / sizeof(y_points[0]);
@@ -47,11 +41,11 @@ int sleep_time = 32;
 int pause_leadend_counter = 0;
 int leadend_pause = 1000;
 
-// int pwm_loop_count = 1;
-
 int method_part = 0;
 
 void loop() {
+  loop_menu();
+  
   // static int scrollPos = MAX_DEVICES * 8;
   static int methodPos = 0;
 
@@ -90,11 +84,6 @@ void loop() {
         pause_leadend_counter = leadend_pause / sleep_time;
 
         method_part = (method_part + 1) % 8;
-        lcd.setCursor(0, 1);
-        lcd.print("                ");
-        lcd.setCursor(0, 1);
-        lcd.print("Part: ");
-        lcd.print(method_part + 1);
     }
   }
 }
