@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Encoder.h>
+#include <MD_MAX72xx.h>
 
 // TO FIX
 // when coming out a sub menu like methods, there's an auto-scroll and the upper menu changes its selection, causing a visual jump
@@ -25,6 +26,12 @@ byte bell[8] = {
   B11111,
   B00100,
 };
+
+extern void setBrightness(int b);
+
+int lcdBrightness = 5;
+
+String leafScreenName = "";
 
 // LCD and encoder setup
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -68,13 +75,14 @@ MenuItem submenu2Items[] = {
 
 // ---- Now define the actual submenus (after the arrays exist) ----
 Menu submenu1 = {"Method:", submenu1Items, ARRAY_LEN(submenu1Items)};
-Menu submenu2 = {"Brightness", submenu2Items, ARRAY_LEN(submenu2Items)};
+// Menu submenu2 = {"Brightness", nullptr, 0};  //submenu2Items, ARRAY_LEN(submenu2Items)};
 
 // ---- Now define main menu items (using the submenus above) ----
 char mainTitle[] = {'M', 'e', 't', 'h', 'o', 'd', ' ', 'h', 'y', 'p', 'n', 'o', 's', 'i', 's', '\1'};
 MenuItem mainMenuItems[] = {
   {"Choose method", &submenu1},
-  {"Brightness", &submenu2}
+  // null means a leaf screen with non-menu handling
+  {"Brightness", nullptr}
 };
 
 Menu mainMenu = {mainTitle, mainMenuItems, ARRAY_LEN(mainMenuItems)};
@@ -92,6 +100,16 @@ bool buttonPressed = false;
 void updateMenuDisplay() {
   lcd.clear();
   lcd.setCursor(0, 0);
+  if (leafScreenName != "") {
+    if (leafScreenName == "Brightness") {
+      lcd.print("   Brightness");
+      lcd.setCursor(0, 1);
+      lcd.print("       ");
+      lcd.print(lcdBrightness);
+    }
+    return;
+  }
+
   // lcd.write((uint8_t)1); // to add bell char
   lcd.print(currentMenu->title);
   lcd.setCursor(0, 1);
@@ -134,24 +152,37 @@ void handleSelection() {
 
   MenuItem* selected = &currentMenu->items[currentMenuIndex];
 
-  if (strcmp(selected->label, "Back") == 0 && menuDepth > 0) {
+  // exiting a leaf node?
+  if (leafScreenName != "") {
+    leafScreenName = "";
+  }
+  else if (strcmp(selected->label, "Back") == 0 && menuDepth > 0) {
     currentMenu = parentMenus[--menuDepth];
     currentMenuIndex = currentMenu->activeItem;
-    Serial.print("Back out a menu, restored currentMenuIndex = ");
+    Serial.print("AAA Back out a menu, restored currentMenuIndex = ");
     Serial.println(currentMenuIndex);
-  } else if (selected->submenu) {
+  }
+  else if (selected->submenu != nullptr) {
+    Serial.println("BBB into submenu");
+
     parentMenus[menuDepth++] = currentMenu;
     currentMenu->activeItem = currentMenuIndex;
     currentMenu = selected->submenu;
     currentMenuIndex = 0;
-  } else {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Selected:");
-    lcd.setCursor(0, 1);
-    lcd.print(selected->label);
-    // TODO this is not good! but is temp code, anyway
-    delay(1000);
+  }
+  else {
+    Serial.print("CCC a leaf...");
+    leafScreenName = selected->label;
+
+    // updateMenuDisplay();
+
+    // lcd.clear();
+    // lcd.setCursor(0, 0);
+    // lcd.print("Selected:");
+    // lcd.setCursor(0, 1);
+    // lcd.print(selected->label);
+    // // TODO this is not good! but is temp code, anyway
+    // delay(1000);
   }
 
   // does this need doing at all? try without
@@ -202,14 +233,21 @@ void loop_menu() {
         return;
       }
 
-      int menuCount = currentMenu->itemCount;
-      currentMenuIndex = (currentMenuIndex + lastRotaryPosition - newRotaryPosition + menuCount) % menuCount;
+      // leaf screen?
+      if (leafScreenName == "Brightness") {
+        lcdBrightness = lcdBrightness + lastRotaryPosition - newRotaryPosition;
+        lcdBrightness = max(min(lcdBrightness, 15), 0);
+        setBrightness(lcdBrightness);
+      }
+      else {
+        int menuCount = currentMenu->itemCount;
+        currentMenuIndex = (currentMenuIndex + lastRotaryPosition - newRotaryPosition + menuCount) % menuCount;
+        Serial.print("Item: ");
+        Serial.println(currentMenuIndex);
+      }
 
       lastRotaryPosition = newRotaryPosition;
       updateMenuDisplay();
-
-      Serial.print("Item: ");
-      Serial.println(currentMenuIndex);
     }
   // }
 
