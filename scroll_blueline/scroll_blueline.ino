@@ -50,14 +50,14 @@ void setup() {
 }
 
 size_t y_points_len = sizeof(y_points) / sizeof(y_points[0]);
-int sleep_time = 50;
+int sleep_time = 120;
 int pause_leadend_counter = 0;
 int leadend_pause = 100;
 int method_part = 0;
 bool invert = false;
 
 void setBrightness(int b) {
-  mx.control(MD_MAX72XX::INTENSITY, 5);
+  mx.control(MD_MAX72XX::INTENSITY, b);
 }
 
 void setSpeed(int s) {

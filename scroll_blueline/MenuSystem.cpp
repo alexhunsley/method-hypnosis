@@ -32,7 +32,7 @@ int tick_duration = 50;
 extern void setBrightness(int b);
 extern void setSpeed(int s);
 
-int lcdBrightness = 5;
+int lcdBrightness = 1;
 
 String leafScreenName = "";
 
