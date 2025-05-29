@@ -1,14 +1,12 @@
 # gen_points_for_place_notation.py
 
 def apply_place_notation(row, notation):
-    """
-    Applies a single place notation to a row.
-    """
-    if notation == "-":
-        # Swap adjacent pairs (cross)
+    """Apply a single place notation step to a row."""
+    if notation == 'x':
+        # Cross: swap all adjacent pairs
         return ''.join([row[i + 1] + row[i] for i in range(0, len(row), 2)])
     else:
-        # Place notation: make places at the specified positions, swap others
+        # Make places, swap all other pairs
         places = [int(ch) - 1 for ch in notation if ch.isdigit()]
         new_row = list(row)
         i = 0
@@ -20,32 +18,63 @@ def apply_place_notation(row, notation):
             i += 2
         return ''.join(new_row)
 
-def generate_rows(start_row, place_notations):
-    """
-    Generate rows by applying place notations in sequence.
-    """
+
+def parse_place_notation_sequence(seq):
+    result = []
+    current = ""
+    final_result = []
+    
+    for char in seq:
+        if char == ',':
+            if current:
+                result.append(current)
+                current = ""
+            final_result.extend(result)
+            final_result.extend(list(reversed(result))[1:])
+            result = []
+        elif char in ".x":
+            if current:
+                result.append(current)
+                current = ""
+            if char == 'x':
+                result.append('x')
+        else:
+            current += char
+
+    if current:
+        result.append(current)
+
+    final_result.extend(result)
+    return final_result
+
+def generate_rows(start_row, place_notation_string):
+    """Generate the sequence of rows based on parsed place notation."""
+    sequence = parse_place_notation_sequence(place_notation_string)
+
+    print(f"processed PN: {sequence}")
+
     row = start_row
     rows = [row]
-    for pn in place_notations:
+    for pn in sequence:
         row = apply_place_notation(row, pn)
         rows.append(row)
     return rows
 
-def bell_8_positions(rows):
-    """
-    Extract zero-based positions of bell '8' from each row.
-    """
-    return [row.index('8') for row in rows]
 
-# Example Place Notation for Bristol Surprise Major (partial, for demo purposes)
-place_notation_str = "-58-14-58-36-14-58-36-14-58-14-58-36-14-58-36-18"
-place_notations = place_notation_str.split('-')
+# Full place notation for one lead of Bristol Surprise Major
+place_notation_str = "x58x14.58x58.36.14x14.58x14x18,18"
+# place_notation_str = "x12,14"
+sequence = parse_place_notation_sequence(place_notation_str)
+
+print(sequence)
+print(len(sequence))
 
 # Generate rows
-rows = generate_rows("12345678", place_notations)
-print('\n'.join(rows))
+rows = generate_rows("12345678", place_notation_str)
+print("\n".join(rows))
 
-# # Extract 8's positions (zero-indexed)
+
+# # Extract positions of bell 8 (zero-indexed)
 # positions = bell_8_positions(rows)
 
 # # Output as C array
