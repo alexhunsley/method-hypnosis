@@ -46,6 +46,7 @@ def parse_place_notation_sequence(seq):
 
     final_result.extend(result)
     return final_result
+    
 
 def generate_rows(start_row, place_notation_string):
     """Generate the sequence of rows based on parsed place notation."""
