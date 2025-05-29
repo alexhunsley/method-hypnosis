@@ -202,9 +202,10 @@ void handleSelection() {
 }
 
 void start_menu() {
+  pinMode(buttonPin, INPUT_PULLUP);
+
   lcd.init();
   lcd.backlight();
-  pinMode(buttonPin, INPUT_PULLUP);
 
   lcd.createChar(0, smiley);
   lcd.createChar(1, bell);
@@ -217,6 +218,7 @@ void start_menu() {
 int debug_tick = 0;
 
 void loop_menu() {
+  // Serial.println("ENTER loop menu");
   // encoder.tick();
 
 // think the lib will handle this?
@@ -227,10 +229,10 @@ void loop_menu() {
 
     long newRotaryPosition = encoder.read() / 4;  // divide by 4 to debounce steps
 
-    // if (debug_tick == 0) {
-    //   Serial.println(newRotaryPosition); 
-    // }
-    // debug_tick = (debug_tick + 1) % 10;
+    if (debug_tick == 0) {
+      Serial.println(newRotaryPosition); 
+    }
+    debug_tick = (debug_tick + 1) % 10;
 
     if (newRotaryPosition != lastRotaryPosition) {
       Serial.print(">>>>>>> Change in pos detected: ");
@@ -264,26 +266,29 @@ void loop_menu() {
       lastRotaryPosition = newRotaryPosition;
       updateMenuDisplay();
     }
-  // }
+  // // }
 
-  if (!displayIsOff && sleepMessageStart == 0 && millis() - lastActivityTime > inactivityTimeout) {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(sleepMessage);
-    sleepMessageStart = millis();
-    Serial.println("<< DISPLAY about to sleep... >>");
-  }
-  if (sleepMessageStart > 0 && millis() - sleepMessageStart > sleepMessageDuration) {
-    sleepMessageStart = 0;
-    displayIsOff = true;
-    lcd.noBacklight();
-    lcd.noDisplay();
-    Serial.println("<< DISPLAY SLEPT >>");
-  }
+  // if (!displayIsOff && sleepMessageStart == 0 && millis() - lastActivityTime > inactivityTimeout) {
+  //   lcd.clear();
+  //   lcd.setCursor(0, 0);
+  //   lcd.print(sleepMessage);
+  //   sleepMessageStart = millis();
+  //   Serial.println("<< DISPLAY about to sleep... >>");
+  // }
+  // if (sleepMessageStart > 0 && millis() - sleepMessageStart > sleepMessageDuration) {
+  //   sleepMessageStart = 0;
+  //   displayIsOff = true;
+  //   lcd.noBacklight();
+  //   lcd.noDisplay();
+  //   Serial.println("<< DISPLAY SLEPT >>");
+  // }
   if (digitalRead(buttonPin) == LOW && !buttonPressed) {
+    Serial.println("<< button pressed");
     buttonPressed = true;
     handleSelection();
   } else if (digitalRead(buttonPin) == HIGH) {
+    // Serial.println("<< button released");
     buttonPressed = false;
   }
+  // Serial.println(" ... EXIT loop menu");
 }
