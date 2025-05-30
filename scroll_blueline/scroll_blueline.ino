@@ -59,7 +59,7 @@ MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::GENERIC_HW, DATA_PIN, CLK_PIN, CS_PIN, MA
 // enough for bristol if using ',' to reverse
 #define MAX_METHOD_PLACE_NOTATION_LENGTH 40
 // place notation array
-#define MAX_TOKENS 33
+#define MAX_TOKENS 35
 // can handle max 4 char notate like 1256 (the last char is for
 // null temrinator; could get rid of need for that eventually with helper func)
 #define MAX_TOKEN_LENGTH 5
@@ -74,9 +74,9 @@ struct Method {
 };
 
 const Method methods[] = {
-                      // {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
+                      {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
                       // {"Bristol", "x58x14.58x58.36.14x14.58x14x18", 8},
-                      {"Bristol", "1234x18x,12", 8},
+                      // {"Bristol", "1234x18x,12", 8},
                       {"Double Norwich", "x14x36x58x18,18", 8}
                     };
 
@@ -96,7 +96,7 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 120;
+int sleep_time = 1000;
 int pause_leadend_counter = 0;
 int leadend_pause = 100;
 int method_part = 0;
@@ -165,7 +165,6 @@ char* copy_substring(const char* src, int start, int len) {
 void loop() {
   static int loop_count = 0;
   // PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
-  loop_count++;
 
   loop_menu();
 
@@ -227,9 +226,14 @@ void loop() {
 
   // int plotPos = change.indexOf("8");
 
+  // next row
+  change = apply_place_notation(change, expandedPN[loop_count % selectedMethodPNCount]);
+
   const char* pos = strchr(change, '8');
   int plotPos = (pos != NULL) ? (pos - change) : -1;
-  plotPos = (plotPos + loop_count) % 8;
+  // int plotPos = (pos != NULL) ? pos : 0;
+
+  // plotPos = (plotPos + loop_count) % 8;
   // PRINT_VAR("plotPos: ", plotPos);
 
   // TODO you might want plotPos on the y bit here, not x
@@ -314,6 +318,7 @@ void loop() {
   // mx.update();
   // END comment out
 
+  loop_count++;
   delay(sleep_time);
 
   // if (pause_leadend_counter > 0) {
@@ -429,56 +434,60 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   return resultCount;
 }
 
-// TODO fix this! to char*
-String apply_place_notation(String row, String notation) {
+#define MAX_ROW_LENGTH 11  // Max 10 bells + null terminator
+
+char* apply_place_notation(const char* row, const char* notation) {
   PRINT_VAR("Row: ", row);
   PRINT_VAR("Notation: ", notation);
-  
-  int len = row.length();
 
-  if (notation == "x") {
+  int len = strlen(row);
+
+  if (strcmp(notation, "x") == 0) {
     // Cross: swap all adjacent pairs
-    char *result = '\0';
+    char* result = (char*)malloc(len + 1);
+    if (!result) return NULL;  // check malloc success
+    int ri = 0;
+
     for (int i = 0; i < len; i += 2) {
       if (i + 1 < len) {
-        result += row[i + 1];
-        result += row[i];
+        result[ri++] = row[i + 1];
+        result[ri++] = row[i];
       } else {
-        result += row[i]; // Leave last unpaired character
+        result[ri++] = row[i];
       }
     }
+    result[ri] = '\0';
     return result;
   } else {
     // Parse places
-    bool isPlace[10] = {false};  // up to 10 bells max (0-indexed)
+    bool isPlace[10] = {false};
 
-    for (int i = 0; i < notation.length(); i++) {
+    for (int i = 0; notation[i] != '\0'; i++) {
       char c = notation[i];
       if (c >= '1' && c <= '9') {
         isPlace[c - '1'] = true;
-      } else if (c == '0') {  // handle 10 as '0'
+      } else if (c == '0') {
         isPlace[9] = true;
       }
     }
 
-    // Copy original row to modifiable array
-    char new_row[11];  // support up to 10 chars + null terminator
-    row.toCharArray(new_row, 11);
+    char* new_row = (char*)malloc(len + 1);
+    if (!new_row) return NULL;
+    strcpy(new_row, row);
 
-    // Swap all non-place adjacent pairs
     int i = 0;
     while (i < len - 1) {
       if (isPlace[i]) {
         i++;
         continue;
       }
-      // swap i and i+1
       char temp = new_row[i];
       new_row[i] = new_row[i + 1];
       new_row[i + 1] = temp;
       i += 2;
     }
 
-    return String(new_row);
+    return new_row;
   }
 }
+
