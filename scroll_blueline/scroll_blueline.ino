@@ -112,9 +112,9 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 75;
+int sleep_time = 300;
 int pause_leadend_counter = 0;
-int leadend_pause = 500;
+int leadend_pause = 3000;
 int method_part = 0;
 bool invert = false;
 
@@ -196,13 +196,8 @@ void loop() {
     memcpy(change, rounds, methods[selectedMethodIdx].stage);
     change[methods[selectedMethodIdx].stage] = '\0';
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
+    PRINT_VAR("resultCount B : ", selectedMethodPNCount);
   }
-
-  const char* pos = strchr(change, TARGET_BELL);
-  int plotPos = (pos != NULL) ? (pos - change) : -1;
-  mx.transform(MD_MAX72XX::TSU);  // Scroll up
-  mx.setPoint(7, 7 - plotPos, true);
-  mx.update();
 
   // debug: show bitmap as in memory
   // for (uint8_t col = 0; col < mx.getColumnCount(); col++) {
@@ -212,22 +207,32 @@ void loop() {
   //   Serial.println(b, BIN);
   // }
 
-  delay(sleep_time);
+  if (pause_leadend_counter > 0) {
+    pause_leadend_counter--;
+  }
+  else {
+    // scroll display
+    const char* pos = strchr(change, TARGET_BELL);
+    int plotPos = (pos != NULL) ? (pos - change) : 0;
+    mx.transform(MD_MAX72XX::TSU);  // Scroll up
+    mx.setPoint(7, 7 - plotPos, true);
+    mx.update();
 
-  // if (pause_leadend_counter > 0) {
-  //   pause_leadend_counter--;
-  // }
-  // else {
     loop_count++;
-    int pnIndex = loop_count % selectedMethodPNCount;
+    PRINT_VAR("Not in pause, loop_count++ to ", loop_count);
 
-    // `change` is modified in-place
-    apply_place_notation(change, expandedPN[pnIndex]);
-
-    // if (pnIndex == 0) {
+    // if ((loop_count % selectedMethodPNCount) == selectedMethodPNCount - 1) {
+    // // if ((loop_count % selectedMethodPNCount) == 0) {
     //   pause_leadend_counter = leadend_pause / sleep_time;
     // }
-  // }
+    // else {
+      int pnIndex = loop_count % selectedMethodPNCount;
+
+      // `change` is modified in-place
+      apply_place_notation(change, expandedPN[pnIndex]);
+    // }
+  }
+  delay(sleep_time);
 }
 
 ////////////////////////////////////////////////////
@@ -273,7 +278,6 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
           strcpy(placeNotates[resultCount++], forward[j]);
         }
       }
-
       forwardCount = 0;
     }
     else if (c == '.' || c == 'x') {
@@ -327,6 +331,7 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   //   PRINTLN(placeNotates[i]);
   // }
 
+  PRINT_VAR("resultCount = ", resultCount);
   return resultCount;
 }
 
