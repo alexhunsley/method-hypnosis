@@ -31,6 +31,7 @@ int tick_duration = 50;
 
 extern void setBrightness(int b);
 extern void setSpeed(int s);
+extern void setMethodIndex(int index);
 extern void halt();
 
 int lcdBrightness = 1;
@@ -69,9 +70,10 @@ extern Menu submenu1;
 extern Menu submenu2;
 
 // ---- Now define submenu items ----
-MenuItem submenu1Items[] = {
+MenuItem methodsMenuItems[] = {
   {"Bristol", nullptr},
   {"Stedman", nullptr},
+  {"Double Norwich", nullptr},
   {"Back", nullptr}
 };
 
@@ -82,13 +84,13 @@ MenuItem submenu2Items[] = {
 };
 
 // ---- Now define the actual submenus (after the arrays exist) ----
-Menu submenu1 = {"Method:", submenu1Items, ARRAY_LEN(submenu1Items)};
+Menu methodsMenu = {"Method:", methodsMenuItems, ARRAY_LEN(methodsMenuItems)};
 // Menu submenu2 = {"Brightness", nullptr, 0};  //submenu2Items, ARRAY_LEN(submenu2Items)};
 
 // ---- Now define main menu items (using the submenus above) ----
 char mainTitle[] = {'M', 'e', 't', 'h', 'o', 'd', ' ', 'h', 'y', 'p', 'n', 'o', 's', 'i', 's', '\1'};
 MenuItem mainMenuItems[] = {
-  {"Choose method", &submenu1},
+  {"Choose method", &methodsMenu},
   {"Speed", nullptr},
   // null means a leaf screen with non-menu handling
   {"Brightness", nullptr}
@@ -116,6 +118,7 @@ bool strcmp_PF(const char* ramString, const __FlashStringHelper* flashString) {
 void updateMenuDisplay() {
   lcd.clear();
   lcd.setCursor(0, 0);
+  // if (!strcmp(leafScreenName, "")) {
   if (!strcmp_PF(leafScreenName, "")) {
     if (strcmp_PF(leafScreenName, MENU_BRIGHTNESS)) {
       lcd.print(F("   Brightness"));
@@ -199,6 +202,15 @@ void handleSelection() {
     Serial.print(F("CCC a leaf..."));
     leafScreenName = selected->label;
 
+    if (currentMenu == &methodsMenu) {
+      // Serial.println("HAROOOOO! METHOD SEL");
+      // TODO need order of method items to match what is defined in scroll_blueino.ino.
+      // Fix this properly later.
+      setMethodIndex(currentMenuIndex);
+
+      // don't attempt to updateMenuDisplay
+      return;
+    }
     // updateMenuDisplay();
 
     // lcd.clear();

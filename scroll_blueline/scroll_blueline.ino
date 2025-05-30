@@ -87,8 +87,8 @@ const Method methods[] = {
                       {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
                       // {"Bristol", "x58x14.58x58.36.14x14.58x14x18", 8},
                       // {"Bristol", "1234x18x,12", 8},
+                      {"Stedman", "3.1.7.3.1.3,1", 7},
                       {"Double Norwich", "x14x36x58x18,18", 8},
-                      {"Stedman", "3.1.7.3.1.3,1", 7}
                     };
 
 int selectedMethodIdx = 2;
@@ -114,7 +114,7 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 175;
+int sleep_time = 75;
 int pause_leadend_counter = 0;
 int leadend_pause = 1000;
 int method_part = 0;
@@ -190,16 +190,19 @@ void loop() {
     return;
   }
 
-  // DBG_MEM;
+  DBG_MEM;
   loop_menu();
 
   if (selectedMethodPNCount == 0) {
-    PRINTF("INIT METHOD!!!!!!!!!!!!!!!!!!!");
+    // pause_leadend_counter = 0;
+    loop_count = 0;
+    // PRINTF("INIT METHOD!!!!!!!!!!!!!!!!!!!");
     memcpy(change, rounds, methods[selectedMethodIdx].stage);
     change[methods[selectedMethodIdx].stage] = '\0';
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
     selectedMethodTargetBell = '0' + methods[selectedMethodIdx].stage;
-    PRINT_VAR("resultCount B : ", selectedMethodPNCount);
+    // PRINT_VAR("resultCount B : ", selectedMethodPNCount);
+    mx.clear();
   }
 
   // debug: show bitmap as in memory
