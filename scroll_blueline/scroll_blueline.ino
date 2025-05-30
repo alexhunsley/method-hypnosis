@@ -6,6 +6,25 @@
 
 #define DBG_MEM() Serial.print(F("Free mem: ")); Serial.println(freeMemory())
 
+// helpers to put strings in flash, not RAM
+#define PRINTF(str) Serial.print(F(str))
+#define PRINTFLN(str) Serial.println(F(str))
+#define PRINT(x) Serial.print(x)
+#define PRINTLN(x) Serial.println(x)
+
+#define PRINT_VAR(label, value)   \
+  do {                            \
+    Serial.print(F(label));       \
+    Serial.println(value);        \
+  } while (0)
+
+#define PRINT_VAR2(label, value, label2)   \
+  do {                                     \
+    Serial.print(F(label));                \
+    Serial.println(value);                 \
+    Serial.print(F(label2));               \
+  } while (0)
+
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
 // Just wire it up to the 5 pins given in the instructions.
 //
@@ -25,7 +44,6 @@
 #define CS_PIN 10
 
 MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
-// MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, CS_PIN, MAX_DEVICES);
 
 #define MAX_METHOD_TITLE_LENGTH 16
 // enough for bristol if using ',' to reverse
@@ -36,6 +54,7 @@ MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_D
 // null temrinator; could get rid of need for that eventually with helper func)
 #define MAX_TOKEN_LENGTH 5
 
+String change = "";
 const String rounds = "1234567890";
 
 struct Method {
@@ -51,19 +70,13 @@ Method methods[] = {
                     {"Double Norwich", "x14x36x58x18,18", 8}
                    };
 
-
-
 int selectedMethodIdx = 0;
 int selectedMethodPNCount = 0;
-// String expandedPN = "";
-
-// String output[MAX_TOKENS];
-
 int frame = 0;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println(F("Serial started..."));
+  PRINT("Serial started...");
   reportVCC();
 
   start_menu();
@@ -92,9 +105,7 @@ long readVcc() {
 }
 
 void reportVCC() {
-  Serial.print(F("Vcc = "));
-  Serial.print(readVcc());
-  Serial.println(F(" mV"));
+  PRINT_VAR2("Vcc = ", readVcc(), " mV");
 }
 
 void setBrightness(int b) {
@@ -116,8 +127,6 @@ void setSpeed(int s) {
 //   }
 // }
 
-String change = "";
-
 // triggers method change
 void setMethodIndex(int methodIndex) {
   selectedMethodIdx = methodIndex;
@@ -127,47 +136,44 @@ void setMethodIndex(int methodIndex) {
 
 void printStringArray(String stringArr[], int count) {
     for (int i = 0; i < count; i++) {
-      Serial.println(stringArr[i]);
+      PRINTLN(stringArr[i]);
     }
 }
 
 void loop() {
   static int loop_count = 0;
-  // Serial.print(">>>>>>>> loop: count = ");
-  // Serial.println(loop_count);
+  PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
   loop_count++;
 
   loop_menu();
 
   if (loop_count < 2) { 
-    Serial.println(methods[0].placeNotation);
-    Serial.println(methods[0].stage);
-    Serial.println(methods[0].title);
-    Serial.println(methods[1].placeNotation);
+    PRINTLN(methods[0].placeNotation);
+    PRINTLN(methods[0].stage);
+    PRINTLN(methods[0].title);
+    PRINTLN(methods[1].placeNotation);
 
-    Serial.print(F("got stage: "));
-    Serial.println(methods[selectedMethodIdx].stage);
+    PRINT_VAR("got stage: ", methods[selectedMethodIdx].stage);
 
     change = rounds.substring(0, methods[selectedMethodIdx].stage);
     // change = rounds.substring(0, 8);
 
-    Serial.print(F("made start rounds change: "));
-    Serial.println(change);
+    PRINT_VAR("made start rounds change: ", change);
 
     char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
 
     // calling this seems to corrupt stuff!
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
 
-    Serial.print(F("selectedPN count: "));
-    Serial.println(selectedMethodPNCount);
-    Serial.print(F("PNs: "));
+    PRINT_VAR("selectedPN count: ", selectedMethodPNCount);
+    PRINTF("PNs: ");
     for (uint8_t i = 0; i < selectedMethodPNCount; i++) {
-      Serial.println(expandedPN[i]);
+      PRINTLN(expandedPN[i]);
     }
-    Serial.print(F(" --- DONE"));
-
+    PRINTFLN(" --- DONE");
   }
+
+  // the real code
 
 // start comment out
   // // TODO we change selectedMethodIdx and do "selectedMethodPNCount = 0" to trigger this again
@@ -289,15 +295,14 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   int forwardCount = 0;
   int resultCount = 0;
 
-  Serial.print(F("DEBUG placeNotation: '"));
-  Serial.print(placeNotation);
-  Serial.println("'");
+  PRINTF("DEBUG placeNotation: ");
+  PRINTLN(placeNotation);
 
   for (unsigned int i = 0; placeNotation[i] != '\0'; i++) {
     char c = placeNotation[i];
 
     if (c == ',') {
-      Serial.println(F("ALAL Found ,"));
+      PRINTFLN("ALAL Found ,");
 
       if (currentLen > 0) {
         current[currentLen] = '\0';
@@ -321,7 +326,7 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
       forwardCount = 0;
     }
     else if (c == '.' || c == 'x') {
-      Serial.println(F("ALAL Got . or x"));
+      PRINTFLN("ALAL Got . or x");
 
       if (currentLen > 0) {
         current[currentLen] = '\0';
@@ -342,18 +347,13 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
         current[currentLen++] = c;
         current[currentLen] = '\0';
       }
-      Serial.print(F("ALAL Append simple notate char: "));
-      Serial.println(c);
-      Serial.print(F("ALAL  which has len: "));
-      Serial.println(currentLen);
+      PRINT_VAR("ALAL Append simple notate char: ", c);
+      PRINT_VAR("ALAL  which has len: ", currentLen);
     }
   }
 
-  Serial.print(F("ALAL FINAL current: '"));
-  Serial.print(current);
-  Serial.print(F("' (len = "));
-  Serial.print(currentLen);
-  Serial.println(F(")"));
+  PRINT_VAR("ALAL FINAL current: ", current);
+  PRINT_VAR(" len = ", currentLen);
 
   if (currentLen > 0) {
     current[currentLen] = '\0';
@@ -363,29 +363,25 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   }
 
   for (int j = 0; j < forwardCount; j++) {
-    Serial.print(F("ALAL append forward to notates arr: "));
-    Serial.println(forward[j]);
+    PRINT_VAR("ALAL append forward to notates arr: ", forward[j]);
 
     if (resultCount < MAX_TOKENS) {
       strcpy(placeNotates[resultCount++], forward[j]);
     }
   }
 
-  Serial.print("PN array count: ");
-  Serial.println(resultCount);
+  PRINT_VAR("PN array count: ", resultCount);
 
   for (int i = 0; i < resultCount; i++) {
-    Serial.println(placeNotates[i]);
+    PRINTLN(placeNotates[i]);
   }
 
   return resultCount;
 }
 
 String apply_place_notation(String row, String notation) {
-  Serial.print(F("Row: "));
-  Serial.println(row);
-  Serial.print(F("Notation: "));
-  Serial.println(notation);
+  PRINT_VAR("Row: ", row);
+  PRINT_VAR("Notation: ", notation);
   
   int len = row.length();
 
@@ -435,25 +431,3 @@ String apply_place_notation(String row, String notation) {
     return String(new_row);
   }
 }
-
-// void setup() {
-//   Serial.begin(9600);
-
-//   String output[MAX_TOKENS];
-//   int count = parse_place_notation_sequence("x58x14.58x58.36.14x14.58x14x18,18", output);
-
-//   String row = "12345678";
-//   Serial.println("Initial row: " + row);
-
-//   for (int i = 0; i < count; i++) {
-//     row = apply_place_notation(row, output[i]);
-//     Serial.println("After " + output[i] + ": " + row);
-//   }
-// }
-
-// void loop() {
-//   // put your main code here, to run repeatedly:
-//   // sleep(100);
-// }
-
-
