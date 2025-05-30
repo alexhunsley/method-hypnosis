@@ -163,45 +163,48 @@ char* copy_substring(const char* src, int start, int len) {
 
 void loop() {
   static int loop_count = 0;
-  // PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
+  PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
   loop_count++;
 
   loop_menu();
 
-  if (loop_count < 2) { 
-    PRINTLN(methods[0].placeNotation);
-    PRINTLN(methods[0].stage);
-    PRINTLN(methods[0].title);
-    PRINTLN(methods[1].placeNotation);
+  // if (loop_count < 2) { 
+  //   PRINTLN(methods[0].placeNotation);
+  //   PRINTLN(methods[0].stage);
+  //   PRINTLN(methods[0].title);
+  //   PRINTLN(methods[1].placeNotation);
 
-    PRINT_VAR("got stage: ", methods[selectedMethodIdx].stage);
+  //   PRINT_VAR("got stage: ", methods[selectedMethodIdx].stage);
 
-    // change = rounds.substring(0, methods[selectedMethodIdx].stage);
-    change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
+  //   // change = rounds.substring(0, methods[selectedMethodIdx].stage);
+  //   change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
 
-    // change = rounds.substring(0, 8);
+  //   // change = rounds.substring(0, 8);
 
-    PRINT_VAR("made start rounds change: ", change);
+  //   PRINT_VAR("made start rounds change: ", change);
 
-    char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
+  //   char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
 
-    // calling this seems to corrupt stuff!
-    selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
+  //   // calling this seems to corrupt stuff!
+  //   selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
 
-    PRINT_VAR("selectedPN count: ", selectedMethodPNCount);
-    PRINTF("PNs: ");
-    for (uint8_t i = 0; i < selectedMethodPNCount; i++) {
-      PRINTLN(expandedPN[i]);
-    }
-    PRINTFLN(" --- DONE");
-  }
+  //   PRINT_VAR("selectedPN count: ", selectedMethodPNCount);
+  //   PRINTF("PNs: ");
+  //   for (uint8_t i = 0; i < selectedMethodPNCount; i++) {
+  //     PRINTLN(expandedPN[i]);
+  //   }
+  //   PRINTFLN(" --- DONE");
+  // }
 
   // the real code
+  static char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
 
 // start comment out
   // // TODO we change selectedMethodIdx and do "selectedMethodPNCount = 0" to trigger this again
   // // on user method change
-  // if (selectedMethodPNCount == 0) {
+  if (selectedMethodPNCount == 0) {
+
+    change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
 
   //   // RECENT I removed & from the below.
   //   Serial.println("Processing the new PN.... (should only happen at start and once per method change)");
@@ -210,7 +213,7 @@ void loop() {
   //   Serial.println(methods[selectedMethodIdx].placeNotation);
   //   Serial.print("-- FINI2");
 
-  //   selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
+    selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
   //   // Serial.print("... and the new pn count: ");
   //   // Serial.println(selectedMethodPNCount);
 
@@ -219,8 +222,19 @@ void loop() {
   //   // // printStringArray(expandedPN, ARRAY_LEN(expandedPN));
   //   // Serial.print("First array item: ");
   //   // Serial.println(expandedPN[0]);
-  // }
+  }
 
+  // int plotPos = change.indexOf("8");
+
+  const char* pos = strchr(change, '1');
+  int plotPos = (pos != NULL) ? (pos - change) : -1;
+  plotPos = (plotPos + loop_count) % 8;
+  PRINT_VAR("plotPos: ", plotPos);
+
+  // TODO you might want plotPos on the y bit here, not x
+  mx.transform(MD_MAX72XX::TSL);  // Scroll up
+  mx.setPoint(7 - plotPos, 0, true);
+  mx.update();
 
   // // if (frame == 0 && invert) {
   // //   setAll();
