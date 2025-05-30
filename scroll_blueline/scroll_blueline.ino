@@ -52,6 +52,7 @@ int freeMemory() {
 // So uncheck the Arduino IDE Library manager's 'check dependencies' option to
 // get MaxPanel to install.
 
+#define TARGET_BELL '8'
 #define MAX_DEVICES 1
 
 #define DATA_PIN 11
@@ -61,6 +62,8 @@ int freeMemory() {
 // note: FC16_HW is the common 4-in-1 -- for single display, need to use GENERIC_HW here!
 MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::GENERIC_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
+
+#define MAX_ROW_LENGTH 11  // Max 10 bells + null terminator
 #define MAX_METHOD_TITLE_LENGTH 20
 // enough for bristol if using ',' to reverse
 #define MAX_METHOD_PLACE_NOTATION_LENGTH 40
@@ -87,7 +90,7 @@ const Method methods[] = {
                       {"Double Norwich", "x14x36x58x18,18", 8}
                     };
 
-int selectedMethodIdx = 0;
+int selectedMethodIdx = 1;
 int selectedMethodPNCount = 0;
 int frame = 0;
 
@@ -109,9 +112,9 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 150;
+int sleep_time = 75;
 int pause_leadend_counter = 0;
-int leadend_pause = 100;
+int leadend_pause = 500;
 int method_part = 0;
 bool invert = false;
 
@@ -177,6 +180,7 @@ char* copy_substring(const char* src, int start, int len) {
 
 void loop() {
   static int loop_count = 0;
+  static char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
 
   if (isHalted) {
     // big sleep for you, soldier
@@ -185,92 +189,19 @@ void loop() {
   }
 
   DBG_MEM;
-
-  // PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
-
   loop_menu();
 
-  // if (loop_count < 2) { 
-  //   PRINTLN(methods[0].placeNotation);
-  //   PRINTLN(methods[0].stage);
-  //   PRINTLN(methods[0].title);
-  //   PRINTLN(methods[1].placeNotation);
-
-  //   PRINT_VAR("got stage: ", methods[selectedMethodIdx].stage);
-
-  //   // change = rounds.substring(0, methods[selectedMethodIdx].stage);
-  //   change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
-
-  //   // change = rounds.substring(0, 8);
-
-  //   PRINT_VAR("made start rounds change: ", change);
-
-  //   char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
-
-  //   // calling this seems to corrupt stuff!
-  //   selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
-
-  //   PRINT_VAR("selectedPN count: ", selectedMethodPNCount);
-  //   PRINTF("PNs: ");
-  //   for (uint8_t i = 0; i < selectedMethodPNCount; i++) {
-  //     PRINTLN(expandedPN[i]);
-  //   }
-  //   PRINTFLN(" --- DONE");
-  // }
-
-  // the real code
-  static char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
-
-// start comment out
-  // // TODO we change selectedMethodIdx and do "selectedMethodPNCount = 0" to trigger this again
-  // // on user method change
   if (selectedMethodPNCount == 0) {
-
     PRINTF("INIT METHOD!!!!!!!!!!!!!!!!!!!");
-
-    // change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
     memcpy(change, rounds, methods[selectedMethodIdx].stage);
-    // terminate in case we log it etc.
     change[methods[selectedMethodIdx].stage] = '\0';
-
-  //   // RECENT I removed & from the below.
-  //   Serial.println("Processing the new PN.... (should only happen at start and once per method change)");
-    
-  //   Serial.print("methods[selectedMethodIdx].placeNotation is: ");
-  //   Serial.println(methods[selectedMethodIdx].placeNotation);
-  //   Serial.print("-- FINI2");
-
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
-  //   // Serial.print("... and the new pn count: ");
-  //   // Serial.println(selectedMethodPNCount);
-
-  //   // Serial.print("Expanded PN: ");
-  //   // // Serial.println(expandedPN);
-  //   // // printStringArray(expandedPN, ARRAY_LEN(expandedPN));
-  //   // Serial.print("First array item: ");
-  //   // Serial.println(expandedPN[0]);
   }
 
-  // int plotPos = change.indexOf("8");
-
-  // next row
-  // change =  it's in place now!
-  apply_place_notation(change, expandedPN[loop_count % selectedMethodPNCount]);
-
-  const char* pos = strchr(change, '8');
+  const char* pos = strchr(change, TARGET_BELL);
   int plotPos = (pos != NULL) ? (pos - change) : -1;
-  // int plotPos = (pos != NULL) ? pos : 0;
-
-  // plotPos = (plotPos + loop_count) % 8;
-  // PRINT_VAR("plotPos: ", plotPos);
-
-  // TODO you might want plotPos on the y bit here, not x
   mx.transform(MD_MAX72XX::TSU);  // Scroll up
-
-  // mx.setPoint(4, 0, true);
-  // Y, inv X!
   mx.setPoint(7, 7 - plotPos, true);
-
   mx.update();
 
   // debug: show bitmap as in memory
@@ -281,84 +212,21 @@ void loop() {
   //   Serial.println(b, BIN);
   // }
 
-  // // if (frame == 0 && invert) {
-  // //   setAll();
-  // // }
-
-  // // // mx.setPoint(0, 0, true); 
-  // // mx.setPoint(frame % 8, frame / 8, !invert); 
-
-  // // mx.update();
-  // // frame = (frame + 1) % 64;
-  // // if (frame == 0) { 
-  // //   invert = !invert;
-  // //   if (!invert) {
-  // //       mx.clear();
-  // //   }
-  // // }
-  // // delay(sleep_time);
-
-  
-  // // static int scrollPos = MAX_DEVICES * 8;
-  // static int methodPos = 0;
-
-  // // mx.clear();
-
-
-  // // mx.update();
-  // // delay(sleep_time * 3);
-
-  // // with cable going into LEDs at top:
-  // // x goes right, y goes down.
-  // // int x = 1;
-  // // int y = 0;
-  // // mx.setPoint(x, y, true);
-
-  // // TODO scroll the display!
-
-  // // for (uint8_t y = 0; y < MAX_DEVICES * 8; y++) {
-  // //   // int y = methodPos - col;
-
-  // //   // if (y >= 0 && y < (MAX_DEVICES * 8)) {
-  // //     uint8_t x = y_points[(y + methodPos) % y_points_len];
-  // //     if (x < 8) {
-  // //       mx.setPoint(x, y, true);
-  // //     }
-  // //   // }
-  // // // }
-  // // }
-
-  // mx.transform(MD_MAX72XX::TSL);  // Scroll up
-  // // int plotPos = 4;
-  // int plotPos = change.indexOf("8");
-  // // TODO you might want plotPos on the y bit here, not x
-  // mx.setPoint(plotPos, 0, true);
-
-  // // change = apply_place_notation(change, String(expandedPN[methodPos]));
-  // change = apply_place_notation(change, expandedPN[methodPos]);
-  // Serial.print("Change: ");
-  // Serial.println(change);
-
-  // // mx.setPoint(1, 0, true);
-
-  // methodPos = (methodPos + 1) % selectedMethodPNCount;
-
-  // mx.update();
-  // END comment out
-
-  loop_count++;
   delay(sleep_time);
 
   // if (pause_leadend_counter > 0) {
   //   pause_leadend_counter--;
   // }
   // else {
-  //   methodPos = (methodPos + 1) % y_points_len; // - MAX_DEVICES * 8);
-  //   if ((methodPos % 32) == 1) {
-  //       pause_leadend_counter = leadend_pause / sleep_time;
+    loop_count++;
+    int pnIndex = loop_count % selectedMethodPNCount;
 
-  //       method_part = (method_part + 1) % 8;
-  //   }
+    // `change` is modified in-place
+    apply_place_notation(change, expandedPN[pnIndex]);
+
+    // if (pnIndex == 0) {
+    //   pause_leadend_counter = leadend_pause / sleep_time;
+    // }
   // }
 }
 
@@ -461,8 +329,6 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
 
   return resultCount;
 }
-
-#define MAX_ROW_LENGTH 11  // Max 10 bells + null terminator
 
 void apply_place_notation(char* row, const char* notation) {
   static bool workingIsPlace[10];
