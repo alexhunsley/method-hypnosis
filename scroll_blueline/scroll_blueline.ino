@@ -6,7 +6,7 @@
 
 #define DBG_MEM() Serial.print(F("Free mem: ")); Serial.println(freeMemory())
 
-// helpers to put strings in flash, not RAM
+// logging helpers, including F variants to put strings in flash not RAM
 #define PRINTF(str) Serial.print(F(str))
 #define PRINTFLN(str) Serial.println(F(str))
 #define PRINT(x) Serial.print(x)
@@ -24,6 +24,15 @@
     Serial.println(value);                 \
     Serial.print(F(label2));               \
   } while (0)
+
+// enable these instead of the usual to disable logging and save memory
+// #define PRINTF(str)
+// #define PRINTFLN(str)
+// #define PRINT(x)
+// #define PRINTLN(x)
+// #define PRINT_VAR(label, value)
+// #define PRINT_VAR2(label, value, label2)
+
 
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
 // Just wire it up to the 5 pins given in the instructions.
@@ -63,12 +72,12 @@ struct Method {
   const int stage;
 };
 
-Method methods[] = {
-                    // {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
-                    // {"Bristol", "x58x14.58x58.36.14x14.58x14x18", 8},
-                    {"Bristol", "1234x18x,12", 8},
-                    {"Double Norwich", "x14x36x58x18,18", 8}
-                   };
+const Method methods[] = {
+                      // {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
+                      // {"Bristol", "x58x14.58x58.36.14x14.58x14x18", 8},
+                      {"Bristol", "1234x18x,12", 8},
+                      {"Double Norwich", "x14x36x58x18,18", 8}
+                    };
 
 int selectedMethodIdx = 0;
 int selectedMethodPNCount = 0;
