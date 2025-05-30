@@ -106,15 +106,15 @@ void updateMenuDisplay() {
   lcd.setCursor(0, 0);
   if (leafScreenName != "") {
     if (leafScreenName == "Brightness") {
-      lcd.print("   Brightness");
+      lcd.print(F("   Brightness"));
       lcd.setCursor(0, 1);
-      lcd.print("       ");
+      lcd.print(F("       "));
       lcd.print(lcdBrightness);
     }
     else if (leafScreenName == "Speed") {
-      lcd.print("   Scroll speed");
+      lcd.print(F("   Scroll speed"));
       lcd.setCursor(0, 1);
-      lcd.print("       ");
+      lcd.print(F("       "));
       lcd.print(tick_duration);
     }
     return;
@@ -123,7 +123,7 @@ void updateMenuDisplay() {
   // lcd.write((uint8_t)1); // to add bell char
   lcd.print(currentMenu->title);
   lcd.setCursor(0, 1);
-  lcd.print("> ");
+  lcd.print(F("> "));
   lcd.print(currentMenu->items[currentMenuIndex].label);
 }
 
@@ -149,7 +149,7 @@ bool registerActivity() {
   updateMenuDisplay();
   lcd.display();  // Wake up display
   lcd.backlight();
-  Serial.println("<< WOKE DISPLAY >>");
+  // Serial.println(F("<< WOKE DISPLAY >>"));
   return true;
 }
 ///////////////////////////////////////////////
@@ -169,7 +169,7 @@ void handleSelection() {
   else if (strcmp(selected->label, "Back") == 0 && menuDepth > 0) {
     currentMenu = parentMenus[--menuDepth];
     currentMenuIndex = currentMenu->activeItem;
-    Serial.print("AAA Back out a menu, restored currentMenuIndex = ");
+    Serial.print(F("AAA Back out a menu, restored currentMenuIndex = "));
     Serial.println(currentMenuIndex);
   }
   else if (selected->submenu != nullptr) {
@@ -181,7 +181,7 @@ void handleSelection() {
     currentMenuIndex = 0;
   }
   else {
-    Serial.print("CCC a leaf...");
+    Serial.print(F("CCC a leaf..."));
     leafScreenName = selected->label;
 
     // updateMenuDisplay();
@@ -236,9 +236,9 @@ void loop_menu() {
     // debug_tick = (debug_tick + 1) % 10;
 
     if (newRotaryPosition != lastRotaryPosition) {
-      Serial.print(">>>>>>> Change in pos detected: ");
+      Serial.print(F(">>>>>>> Change in pos detected: "));
       Serial.print(lastRotaryPosition);
-      Serial.print(" to ");
+      Serial.print(F(" to "));
       Serial.println(newRotaryPosition);
 
       if (registerActivity()) {
@@ -260,7 +260,7 @@ void loop_menu() {
       else {
         int menuCount = currentMenu->itemCount;
         currentMenuIndex = (currentMenuIndex + lastRotaryPosition - newRotaryPosition + menuCount) % menuCount;
-        Serial.print("Item: ");
+        Serial.print(F("Item: "));
         Serial.println(currentMenuIndex);
       }
 
@@ -284,7 +284,7 @@ void loop_menu() {
   //   Serial.println("<< DISPLAY SLEPT >>");
   // }
   if (digitalRead(buttonPin) == LOW && !buttonPressed) {
-    Serial.println("<< button pressed");
+    Serial.println(F("<< button pressed"));
     buttonPressed = true;
     handleSelection();
   } else if (digitalRead(buttonPin) == HIGH) {
