@@ -13,31 +13,31 @@ int freeMemory() {
 #define DBG_MEM Serial.print(F("Free mem: ")); Serial.println(freeMemory())
 
 // logging helpers, including F variants to put strings in flash not RAM
-#define PRINTF(str) Serial.print(F(str))
-#define PRINTFLN(str) Serial.println(F(str))
-#define PRINT(x) Serial.print(x)
-#define PRINTLN(x) Serial.println(x)
+// #define PRINTF(str) Serial.print(F(str))
+// #define PRINTFLN(str) Serial.println(F(str))
+// #define PRINT(x) Serial.print(x)
+// #define PRINTLN(x) Serial.println(x)
 
-#define PRINT_VAR(label, value)   \
-  do {                            \
-    Serial.print(F(label));       \
-    Serial.println(value);        \
-  } while (0)
+// #define PRINT_VAR(label, value)   \
+//   do {                            \
+//     Serial.print(F(label));       \
+//     Serial.println(value);        \
+//   } while (0)
 
-#define PRINT_VAR2(label, value, label2)   \
-  do {                                     \
-    Serial.print(F(label));                \
-    Serial.print(value);                 \
-    Serial.println(F(label2));               \
-  } while (0)
+// #define PRINT_VAR2(label, value, label2)   \
+//   do {                                     \
+//     Serial.print(F(label));                \
+//     Serial.print(value);                 \
+//     Serial.println(F(label2));               \
+//   } while (0)
 
 // enable these instead of the usual to disable logging and save memory
-// #define PRINTF(str)
-// #define PRINTFLN(str)
-// #define PRINT(x)
-// #define PRINTLN(x)
-// #define PRINT_VAR(label, value)
-// #define PRINT_VAR2(label, value, label2)
+#define PRINTF(str)
+#define PRINTFLN(str)
+#define PRINT(x)
+#define PRINTLN(x)
+#define PRINT_VAR(label, value)
+#define PRINT_VAR2(label, value, label2)
 
 
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
@@ -114,9 +114,9 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 150;
+int sleep_time = 100;
 int pause_leadend_counter = 0;
-int leadend_pause = 3000;
+int leadend_pause = 1000;
 int method_part = 0;
 bool invert = false;
 
@@ -190,7 +190,7 @@ void loop() {
     return;
   }
 
-  DBG_MEM;
+  // DBG_MEM;
   loop_menu();
 
   if (selectedMethodPNCount == 0) {
@@ -227,14 +227,12 @@ void loop() {
     PRINT_VAR("Not in pause, loop_count++ to ", loop_count);
 
     // if ((loop_count % selectedMethodPNCount) == selectedMethodPNCount - 1) {
-    // // if ((loop_count % selectedMethodPNCount) == 0) {
+    int pnIndex = loop_count % selectedMethodPNCount;
+    // `change` is modified in-place
+    apply_place_notation(change, expandedPN[pnIndex]);
+    loop_count++;
+    // if (loop_count > selectedMethodPNCount && (loop_count % selectedMethodPNCount) == 1) {
     //   pause_leadend_counter = leadend_pause / sleep_time;
-    // }
-    // else {
-      int pnIndex = loop_count % selectedMethodPNCount;
-      // `change` is modified in-place
-      apply_place_notation(change, expandedPN[pnIndex]);
-      loop_count++;
     // }
   }
   delay(sleep_time);
