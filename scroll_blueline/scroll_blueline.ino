@@ -54,17 +54,17 @@
 
 MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
-#define MAX_METHOD_TITLE_LENGTH 16
+#define MAX_METHOD_TITLE_LENGTH 20
 // enough for bristol if using ',' to reverse
 #define MAX_METHOD_PLACE_NOTATION_LENGTH 40
 // place notation array
-#define MAX_TOKENS 32
+#define MAX_TOKENS 33
 // can handle max 4 char notate like 1256 (the last char is for
 // null temrinator; could get rid of need for that eventually with helper func)
 #define MAX_TOKEN_LENGTH 5
 
-String change = "";
-const String rounds = "1234567890";
+char* change;
+const char* rounds = "1234567890";
 
 struct Method {
   char title[MAX_METHOD_TITLE_LENGTH];
@@ -149,9 +149,21 @@ void printStringArray(String stringArr[], int count) {
     }
 }
 
+char* copy_substring(const char* src, int start, int len) {
+  // Allocate memory (+1 for null terminator)
+  char* result = (char*) malloc(len + 1);
+  if (result == NULL) return NULL;  // check for allocation failure
+
+  // Copy substring
+  strncpy(result, src + start, len);
+  result[len] = '\0';  // null-terminate
+
+  return result;
+}
+
 void loop() {
   static int loop_count = 0;
-  PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
+  // PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
   loop_count++;
 
   loop_menu();
@@ -164,7 +176,9 @@ void loop() {
 
     PRINT_VAR("got stage: ", methods[selectedMethodIdx].stage);
 
-    change = rounds.substring(0, methods[selectedMethodIdx].stage);
+    // change = rounds.substring(0, methods[selectedMethodIdx].stage);
+    change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
+
     // change = rounds.substring(0, 8);
 
     PRINT_VAR("made start rounds change: ", change);
@@ -388,6 +402,7 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   return resultCount;
 }
 
+// TODO fix this! to char*
 String apply_place_notation(String row, String notation) {
   PRINT_VAR("Row: ", row);
   PRINT_VAR("Notation: ", notation);
