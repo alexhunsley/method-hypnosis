@@ -254,7 +254,8 @@ void loop() {
   // int plotPos = change.indexOf("8");
 
   // next row
-  change = apply_place_notation(change, expandedPN[loop_count % selectedMethodPNCount]);
+  // change =  it's in place now!
+  apply_place_notation(change, expandedPN[loop_count % selectedMethodPNCount]);
 
   const char* pos = strchr(change, '8');
   int plotPos = (pos != NULL) ? (pos - change) : -1;
@@ -463,65 +464,37 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
 
 #define MAX_ROW_LENGTH 11  // Max 10 bells + null terminator
 
-char* apply_place_notation(const char* row, const char* notation) {
-  static char workingRow[11];
+void apply_place_notation(char* row, const char* notation) {
   static bool workingIsPlace[10];
 
   PRINTFLN("================");
   PRINT_VAR("Row: ", row);
   PRINT_VAR("Notation: ", notation);
-  PRINT_VAR2("(Working row: ", workingRow, ")");
 
   int len = strlen(row);
-  // need for both? or either?
-  strcpy(workingRow, row);
+  memset(workingIsPlace, 0, sizeof(workingIsPlace));
 
-  if (strcmp(notation, "x") == 0) {
-    // Cross: swap all adjacent pairs
-    // char* result = (char*)malloc(len + 1);
-    // if (!result) return NULL;  // check malloc success
-    int ri = 0;
-
-    for (int i = 0; i < len; i += 2) {
-      if (i + 1 < len) {
-        workingRow[ri++] = row[i + 1];
-        workingRow[ri++] = row[i];
-      } else {
-        workingRow[ri++] = row[i];
-      }
+  for (int i = 0; notation[i] != '\0'; i++) {
+    char c = notation[i];
+    if (c >= '1' && c <= '9') {
+      workingIsPlace[c - '1'] = true;
+    } else if (c == '0') {
+      workingIsPlace[9] = true;
     }
-    workingRow[ri] = '\0';
-    PRINT_VAR("End of 'x' processing, got ", workingRow);
-    return workingRow;
-  } else {
-    // Parse places
-    // reset all workingIsPlace[] bools to false
-    memset(workingIsPlace, 0, sizeof(workingIsPlace));
-
-    for (int i = 0; notation[i] != '\0'; i++) {
-      char c = notation[i];
-      if (c >= '1' && c <= '9') {
-        workingIsPlace[c - '1'] = true;
-      } else if (c == '0') {
-        workingIsPlace[9] = true;
-      }
-    }
-
-    int i = 0;
-    // while (i < len - 1) {
-    while (i < len) {
-      if (workingIsPlace[i]) {
-        i++;
-        continue;
-      }
-      char temp = workingRow[i];
-      workingRow[i] = workingRow[i + 1];
-      workingRow[i + 1] = temp;
-      i += 2;
-    }
-    workingRow[i] = '\0';
-    PRINT_VAR("End of PN processing, got ", workingRow);
-    return workingRow;
   }
+
+  int i = 0;
+  while (i < len) {
+    if (workingIsPlace[i]) {
+      i++;
+      continue;
+    }
+    char temp = row[i];
+    row[i] = row[i + 1];
+    row[i + 1] = temp;
+    i += 2;
+  }
+  row[i] = '\0';
+  PRINT_VAR("End of PN processing, got row = ", row);
 }
 
