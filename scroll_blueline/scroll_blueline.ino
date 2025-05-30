@@ -52,7 +52,7 @@ int freeMemory() {
 // So uncheck the Arduino IDE Library manager's 'check dependencies' option to
 // get MaxPanel to install.
 
-#define TARGET_BELL '8'
+#define TARGET_BELL '7'
 #define MAX_DEVICES 1
 
 #define DATA_PIN 11
@@ -87,11 +87,13 @@ const Method methods[] = {
                       {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
                       // {"Bristol", "x58x14.58x58.36.14x14.58x14x18", 8},
                       // {"Bristol", "1234x18x,12", 8},
-                      {"Double Norwich", "x14x36x58x18,18", 8}
+                      {"Double Norwich", "x14x36x58x18,18", 8},
+                      {"Stedman", "3.1.7.3.1.3,1", 7}
                     };
 
-int selectedMethodIdx = 1;
+int selectedMethodIdx = 2;
 int selectedMethodPNCount = 0;
+int selectedMethodTargetBell = 2;
 int frame = 0;
 
 bool isHalted = false;
@@ -112,7 +114,7 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 300;
+int sleep_time = 150;
 int pause_leadend_counter = 0;
 int leadend_pause = 3000;
 int method_part = 0;
@@ -196,6 +198,7 @@ void loop() {
     memcpy(change, rounds, methods[selectedMethodIdx].stage);
     change[methods[selectedMethodIdx].stage] = '\0';
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
+    selectedMethodTargetBell = '0' + methods[selectedMethodIdx].stage;
     PRINT_VAR("resultCount B : ", selectedMethodPNCount);
   }
 
@@ -212,13 +215,15 @@ void loop() {
   }
   else {
     // scroll display
-    const char* pos = strchr(change, TARGET_BELL);
+    // const char* pos = strchr(change, TARGET_BELL);
+    const char* pos = strchr(change, selectedMethodTargetBell);
+
+
     int plotPos = (pos != NULL) ? (pos - change) : 0;
     mx.transform(MD_MAX72XX::TSU);  // Scroll up
     mx.setPoint(7, 7 - plotPos, true);
     mx.update();
 
-    loop_count++;
     PRINT_VAR("Not in pause, loop_count++ to ", loop_count);
 
     // if ((loop_count % selectedMethodPNCount) == selectedMethodPNCount - 1) {
@@ -227,9 +232,9 @@ void loop() {
     // }
     // else {
       int pnIndex = loop_count % selectedMethodPNCount;
-
       // `change` is modified in-place
       apply_place_notation(change, expandedPN[pnIndex]);
+      loop_count++;
     // }
   }
   delay(sleep_time);
