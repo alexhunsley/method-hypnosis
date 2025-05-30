@@ -276,7 +276,11 @@ void loop() {
 #define MAX_TOKENS 16
 #define MAX_TOKEN_LENGTH 12
 
-int parse_place_notation_sequence(const String& placeNotation, char placeNotates[][MAX_TOKEN_LENGTH]) {
+// Constants for sizes
+#define MAX_TOKENS 16
+#define MAX_TOKEN_LENGTH 12
+
+int parse_place_notation_sequence(const char* placeNotation, char placeNotates[][MAX_TOKEN_LENGTH]) {
   char current[MAX_TOKEN_LENGTH];
   int currentLen = 0;
 
@@ -288,7 +292,7 @@ int parse_place_notation_sequence(const String& placeNotation, char placeNotates
   Serial.print(placeNotation);
   Serial.println("'");
 
-  for (unsigned int i = 0; i < placeNotation.length(); i++) {
+  for (unsigned int i = 0; placeNotation[i] != '\0'; i++) {
     char c = placeNotation[i];
 
     if (c == ',') {
