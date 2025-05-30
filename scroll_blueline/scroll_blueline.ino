@@ -52,7 +52,8 @@
 #define CLK_PIN 13
 #define CS_PIN 10
 
-MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
+// note: FC16_HW is the common 4-in-1 -- for single display, need to use GENERIC_HW here!
+MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::GENERIC_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
 #define MAX_METHOD_TITLE_LENGTH 20
 // enough for bristol if using ',' to reverse
@@ -226,15 +227,24 @@ void loop() {
 
   // int plotPos = change.indexOf("8");
 
-  const char* pos = strchr(change, '1');
+  const char* pos = strchr(change, '8');
   int plotPos = (pos != NULL) ? (pos - change) : -1;
-  plotPos = (plotPos + loop_count) % 8;
-  PRINT_VAR("plotPos: ", plotPos);
+  // plotPos = (plotPos + loop_count) % 8;
+  // PRINT_VAR("plotPos: ", plotPos);
 
   // TODO you might want plotPos on the y bit here, not x
   mx.transform(MD_MAX72XX::TSL);  // Scroll up
-  mx.setPoint(7 - plotPos, 0, true);
+  // mx.setPoint(7 - plotPos, 0, true);
+  mx.setPoint(4, 0, true);
   mx.update();
+
+  for (uint8_t col = 0; col < mx.getColumnCount(); col++) {
+    byte b = mx.getColumn(col);
+    Serial.print("Col ");
+    Serial.print(col);
+    Serial.print(": ");
+    Serial.println(b, BIN);
+  }
 
   // // if (frame == 0 && invert) {
   // //   setAll();
