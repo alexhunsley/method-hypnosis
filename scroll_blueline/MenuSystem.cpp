@@ -31,6 +31,7 @@ int tick_duration = 50;
 
 extern void setBrightness(int b);
 extern void setSpeed(int s);
+extern void halt();
 
 int lcdBrightness = 1;
 
@@ -155,6 +156,9 @@ bool registerActivity() {
 ///////////////////////////////////////////////
 
 void handleSelection() {
+  // TODO revert this, just to stop me having to unplug it all the time!
+  halt();
+  
   if (registerActivity()) {
     // ignore selection if display was woken up
     return;

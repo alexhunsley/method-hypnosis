@@ -4,7 +4,13 @@
 #include <SPI.h>
 #include "MenuSystem.h"
 
-#define DBG_MEM() Serial.print(F("Free mem: ")); Serial.println(freeMemory())
+extern int __heap_start, *__brkval;
+int freeMemory() {
+  int v;
+  return (int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval);
+}
+
+#define DBG_MEM Serial.print(F("Free mem: ")); Serial.println(freeMemory())
 
 // logging helpers, including F variants to put strings in flash not RAM
 #define PRINTF(str) Serial.print(F(str))
@@ -21,8 +27,8 @@
 #define PRINT_VAR2(label, value, label2)   \
   do {                                     \
     Serial.print(F(label));                \
-    Serial.println(value);                 \
-    Serial.print(F(label2));               \
+    Serial.print(value);                 \
+    Serial.println(F(label2));               \
   } while (0)
 
 // enable these instead of the usual to disable logging and save memory
@@ -64,7 +70,8 @@ MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::GENERIC_HW, DATA_PIN, CLK_PIN, CS_PIN, MA
 // null temrinator; could get rid of need for that eventually with helper func)
 #define MAX_TOKEN_LENGTH 5
 
-char* change;
+// 11 = 10 bells plus terminator
+char* change = (char*)malloc(11);
 const char* rounds = "1234567890";
 
 struct Method {
@@ -84,6 +91,12 @@ int selectedMethodIdx = 0;
 int selectedMethodPNCount = 0;
 int frame = 0;
 
+bool isHalted = false;
+
+void halt() {
+  isHalted = true;
+}
+
 void setup() {
   Serial.begin(9600);
   PRINT("Serial started...");
@@ -96,7 +109,7 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 1000;
+int sleep_time = 150;
 int pause_leadend_counter = 0;
 int leadend_pause = 100;
 int method_part = 0;
@@ -164,6 +177,15 @@ char* copy_substring(const char* src, int start, int len) {
 
 void loop() {
   static int loop_count = 0;
+
+  if (isHalted) {
+    // big sleep for you, soldier
+    delay(UINT32_MAX);
+    return;
+  }
+
+  DBG_MEM;
+
   // PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
 
   loop_menu();
@@ -204,7 +226,12 @@ void loop() {
   // // on user method change
   if (selectedMethodPNCount == 0) {
 
-    change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
+    PRINTF("INIT METHOD!!!!!!!!!!!!!!!!!!!");
+
+    // change = copy_substring(rounds, 0, methods[selectedMethodIdx].stage);
+    memcpy(change, rounds, methods[selectedMethodIdx].stage);
+    // terminate in case we log it etc.
+    change[methods[selectedMethodIdx].stage] = '\0';
 
   //   // RECENT I removed & from the below.
   //   Serial.println("Processing the new PN.... (should only happen at start and once per method change)");
@@ -350,14 +377,14 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   int forwardCount = 0;
   int resultCount = 0;
 
-  PRINTF("DEBUG placeNotation: ");
-  PRINTLN(placeNotation);
+  // PRINTF("DEBUG placeNotation: ");
+  // PRINTLN(placeNotation);
 
   for (unsigned int i = 0; placeNotation[i] != '\0'; i++) {
     char c = placeNotation[i];
 
     if (c == ',') {
-      PRINTFLN("ALAL Found ,");
+      // PRINTFLN("ALAL Found ,");
 
       if (currentLen > 0) {
         current[currentLen] = '\0';
@@ -381,7 +408,7 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
       forwardCount = 0;
     }
     else if (c == '.' || c == 'x') {
-      PRINTFLN("ALAL Got . or x");
+      // PRINTFLN("ALAL Got . or x");
 
       if (currentLen > 0) {
         current[currentLen] = '\0';
@@ -402,13 +429,13 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
         current[currentLen++] = c;
         current[currentLen] = '\0';
       }
-      PRINT_VAR("ALAL Append simple notate char: ", c);
-      PRINT_VAR("ALAL  which has len: ", currentLen);
+      // PRINT_VAR("ALAL Append simple notate char: ", c);
+      // PRINT_VAR("ALAL  which has len: ", currentLen);
     }
   }
 
-  PRINT_VAR("ALAL FINAL current: ", current);
-  PRINT_VAR(" len = ", currentLen);
+  // PRINT_VAR("ALAL FINAL current: ", current);
+  // PRINT_VAR(" len = ", currentLen);
 
   if (currentLen > 0) {
     current[currentLen] = '\0';
@@ -418,18 +445,18 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   }
 
   for (int j = 0; j < forwardCount; j++) {
-    PRINT_VAR("ALAL append forward to notates arr: ", forward[j]);
+    // PRINT_VAR("ALAL append forward to notates arr: ", forward[j]);
 
     if (resultCount < MAX_TOKENS) {
       strcpy(placeNotates[resultCount++], forward[j]);
     }
   }
 
-  PRINT_VAR("PN array count: ", resultCount);
-
-  for (int i = 0; i < resultCount; i++) {
-    PRINTLN(placeNotates[i]);
-  }
+  // PRINT_VAR("PN array count: ", resultCount);
+  //
+  // for (int i = 0; i < resultCount; i++) {
+  //   PRINTLN(placeNotates[i]);
+  // }
 
   return resultCount;
 }
@@ -437,57 +464,64 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
 #define MAX_ROW_LENGTH 11  // Max 10 bells + null terminator
 
 char* apply_place_notation(const char* row, const char* notation) {
+  static char workingRow[11];
+  static bool workingIsPlace[10];
+
+  PRINTFLN("================");
   PRINT_VAR("Row: ", row);
   PRINT_VAR("Notation: ", notation);
+  PRINT_VAR2("(Working row: ", workingRow, ")");
 
   int len = strlen(row);
+  // need for both? or either?
+  strcpy(workingRow, row);
 
   if (strcmp(notation, "x") == 0) {
     // Cross: swap all adjacent pairs
-    char* result = (char*)malloc(len + 1);
-    if (!result) return NULL;  // check malloc success
+    // char* result = (char*)malloc(len + 1);
+    // if (!result) return NULL;  // check malloc success
     int ri = 0;
 
     for (int i = 0; i < len; i += 2) {
       if (i + 1 < len) {
-        result[ri++] = row[i + 1];
-        result[ri++] = row[i];
+        workingRow[ri++] = row[i + 1];
+        workingRow[ri++] = row[i];
       } else {
-        result[ri++] = row[i];
+        workingRow[ri++] = row[i];
       }
     }
-    result[ri] = '\0';
-    return result;
+    workingRow[ri] = '\0';
+    PRINT_VAR("End of 'x' processing, got ", workingRow);
+    return workingRow;
   } else {
     // Parse places
-    bool isPlace[10] = {false};
+    // reset all workingIsPlace[] bools to false
+    memset(workingIsPlace, 0, sizeof(workingIsPlace));
 
     for (int i = 0; notation[i] != '\0'; i++) {
       char c = notation[i];
       if (c >= '1' && c <= '9') {
-        isPlace[c - '1'] = true;
+        workingIsPlace[c - '1'] = true;
       } else if (c == '0') {
-        isPlace[9] = true;
+        workingIsPlace[9] = true;
       }
     }
 
-    char* new_row = (char*)malloc(len + 1);
-    if (!new_row) return NULL;
-    strcpy(new_row, row);
-
     int i = 0;
-    while (i < len - 1) {
-      if (isPlace[i]) {
+    // while (i < len - 1) {
+    while (i < len) {
+      if (workingIsPlace[i]) {
         i++;
         continue;
       }
-      char temp = new_row[i];
-      new_row[i] = new_row[i + 1];
-      new_row[i + 1] = temp;
+      char temp = workingRow[i];
+      workingRow[i] = workingRow[i + 1];
+      workingRow[i + 1] = temp;
       i += 2;
     }
-
-    return new_row;
+    workingRow[i] = '\0';
+    PRINT_VAR("End of PN processing, got ", workingRow);
+    return workingRow;
   }
 }
 
