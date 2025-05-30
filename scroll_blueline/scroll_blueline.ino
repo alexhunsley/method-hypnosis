@@ -35,6 +35,14 @@ struct Method {
 Method methods[] = {{"Bristol", "x58x14.58x58.36.14x14.58x14x18,18"},
                     {"Double Norwich", "x14x36x58x18,18"}};
 
+
+const int MAX_TOKENS = 64; // expanded PN chars
+int selectedMethodIdx = 1;
+int selectedMethodPNCount = 0;
+// String expandedPN = "";
+
+// String output[MAX_TOKENS];
+
 int frame = 0;
 
 void setup() {
@@ -76,8 +84,19 @@ void setAll() {
   // }
 }
 
+String expandedPN[MAX_TOKENS];
+
 void loop() {
   loop_menu();
+
+  if (selectedMethodPNCount == 0) {
+    // RECENT I removed & from the below.
+    selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
+    Serial.println("Processing the PN....");
+    // Serial.println(expandedPN);
+  }
+
+
 
   // if (frame == 0 && invert) {
   //   setAll();
@@ -99,6 +118,7 @@ void loop() {
   
   // static int scrollPos = MAX_DEVICES * 8;
   static int methodPos = 0;
+String change = "12345678";
 
   // mx.clear();
 
@@ -126,8 +146,19 @@ void loop() {
   // // }
   // }
 
-  mx.transform(MD_MAX72XX::TSU);  // Scroll up
-  mx.setPoint(0, 3, true);
+// TODO put back later
+  // mx.transform(MD_MAX72XX::TSL);  // Scroll up
+
+  // int plotPos = change.indexOf("8");
+  int plotPos = 4;
+  mx.setPoint(plotPos, 0, true);
+
+  change = apply_place_notation(change, String(expandedPN[methodPos]));
+  Serial.println(change);
+
+  // mx.setPoint(1, 0, true);
+
+  methodPos = (methodPos + 1) % selectedMethodPNCount;
 
   mx.update();
   delay(sleep_time);
@@ -147,8 +178,6 @@ void loop() {
 
 ////////////////////////////////////////////////////
 //    NEW CODE for new PN per row approach
-
-const int MAX_TOKENS = 32;  // Adjust as needed for your application
 
 int parse_place_notation_sequence(const String& seq, String result[]) {
   String current = "";
