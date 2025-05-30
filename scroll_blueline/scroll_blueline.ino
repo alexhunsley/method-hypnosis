@@ -4,6 +4,8 @@
 #include <SPI.h>
 #include "MenuSystem.h"
 
+#define DBG_MEM() Serial.print(F("Free mem: ")); Serial.println(freeMemory())
+
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
 // Just wire it up to the 5 pins given in the instructions.
 //
@@ -41,7 +43,12 @@ Method methods[] = {
                    };
 
 
-const int MAX_TOKENS = 24; // expanded PN chars
+// place notation array
+#define MAX_TOKENS 32
+// can handle max 4 char notate like 1256 (the last char is for
+// null temrinator; could get rid of need for that eventually with helper func)
+#define MAX_TOKEN_LENGTH 5
+
 int selectedMethodIdx = 0;
 int selectedMethodPNCount = 0;
 // String expandedPN = "";
@@ -265,9 +272,15 @@ void loop() {
 //    NEW CODE for new PN per row approach
 
 // USE F STRINGS!!!! otherwise corruption. WTF!
-int parse_place_notation_sequence(const String& placeNotation, String placeNotates[]) {
-  String current = "";
-  String forward[MAX_TOKENS];
+// Constants for sizes
+#define MAX_TOKENS 16
+#define MAX_TOKEN_LENGTH 12
+
+int parse_place_notation_sequence(const String& placeNotation, char placeNotates[][MAX_TOKEN_LENGTH]) {
+  char current[MAX_TOKEN_LENGTH];
+  int currentLen = 0;
+
+  char forward[MAX_TOKENS][MAX_TOKEN_LENGTH];
   int forwardCount = 0;
   int resultCount = 0;
 
@@ -275,87 +288,92 @@ int parse_place_notation_sequence(const String& placeNotation, String placeNotat
   Serial.print(placeNotation);
   Serial.println("'");
 
-  // is ok: 
-  // Serial.print(F("parse_place_notation_sequence: placeNotation = "));
-  // Serial.println(placeNotation);
-  // Serial.println(F("-FINI"));
-  
   for (unsigned int i = 0; i < placeNotation.length(); i++) {
-    
     char c = placeNotation[i];
-
-    // is ok
-    // Serial.print(F("i: "));
-    // Serial.println(i);
-    // Serial.print(F("c: "));
-    // Serial.println(c);
 
     if (c == ',') {
       Serial.println(F("ALAL Found ,"));
-      if (current.length() > 0) {
-        forward[forwardCount++] = current;
-        current = "";
+
+      if (currentLen > 0) {
+        current[currentLen] = '\0';
+        if (forwardCount < MAX_TOKENS) {
+          strcpy(forward[forwardCount++], current);
+        }
+        currentLen = 0;
       }
 
-      // Append forward to result
       for (int j = 0; j < forwardCount; j++) {
-        placeNotates[resultCount++] = forward[j];
+        if (resultCount < MAX_TOKENS) {
+          strcpy(placeNotates[resultCount++], forward[j]);
+        }
       }
-
-      // Append reversed forward (excluding the first item in reverse)
       for (int j = forwardCount - 2; j >= 0; j--) {
-        placeNotates[resultCount++] = forward[j];
+        if (resultCount < MAX_TOKENS) {
+          strcpy(placeNotates[resultCount++], forward[j]);
+        }
       }
 
-      forwardCount = 0; // Clear forward
+      forwardCount = 0;
     }
     else if (c == '.' || c == 'x') {
-      Serial.print(F("ALAL Got . or x"));
+      Serial.println(F("ALAL Got . or x"));
 
-      if (current.length() > 0) {
-        forward[forwardCount++] = current;
-        current = "";
+      if (currentLen > 0) {
+        current[currentLen] = '\0';
+        if (forwardCount < MAX_TOKENS) {
+          strcpy(forward[forwardCount++], current);
+        }
+        currentLen = 0;
       }
+
       if (c == 'x') {
-        forward[forwardCount++] = "x";
+        if (forwardCount < MAX_TOKENS) {
+          strcpy(forward[forwardCount++], "x");
+        }
       }
     }
     else {
-      current += c;
+      if (currentLen < MAX_TOKEN_LENGTH - 1) {
+        current[currentLen++] = c;
+        current[currentLen] = '\0';
+      }
       Serial.print(F("ALAL Append simple notate char: "));
       Serial.println(c);
       Serial.print(F("ALAL  which has len: "));
-      Serial.println(current.length());
+      Serial.println(currentLen);
     }
   }
 
   Serial.print(F("ALAL FINAL current: '"));
   Serial.print(current);
   Serial.print(F("' (len = "));
-  Serial.print(current.length());
+  Serial.print(currentLen);
   Serial.println(F(")"));
 
-  if (current.length() > 0) {
-      Serial.print(F("ALAL Assign current to forward: "));
-      Serial.println(current);
-      forward[forwardCount++] = current;
+  if (currentLen > 0) {
+    current[currentLen] = '\0';
+    if (forwardCount < MAX_TOKENS) {
+      strcpy(forward[forwardCount++], current);
+    }
   }
 
-  // Append remaining forward to result
   for (int j = 0; j < forwardCount; j++) {
     Serial.print(F("ALAL append forward to notates arr: "));
-    Serial.print(forward[j]);
-    Serial.println();
+    Serial.println(forward[j]);
 
-    placeNotates[resultCount++] = forward[j];
+    if (resultCount < MAX_TOKENS) {
+      strcpy(placeNotates[resultCount++], forward[j]);
+    }
   }
 
   Serial.print("PN array count: ");
   Serial.println(resultCount);
-  Serial.print("PN: ");
-  printStringArray(placeNotates, ARRAY_LEN(placeNotates));
 
-  return resultCount;  // Return the number of elements stored in result[]
+  for (int i = 0; i < resultCount; i++) {
+    Serial.println(placeNotates[i]);
+  }
+
+  return resultCount;
 }
 
 String apply_place_notation(String row, String notation) {
@@ -368,7 +386,7 @@ String apply_place_notation(String row, String notation) {
 
   if (notation == "x") {
     // Cross: swap all adjacent pairs
-    String result = "";
+    char *result = '\0';
     for (int i = 0; i < len; i += 2) {
       if (i + 1 < len) {
         result += row[i + 1];
