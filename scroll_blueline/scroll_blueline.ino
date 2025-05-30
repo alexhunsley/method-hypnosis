@@ -4,12 +4,8 @@
 #include <SPI.h>
 #include "MenuSystem.h"
 
-// #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
-//
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
 // Just wire it up to the 5 pins given in the instructions.
-//
 //
 // some usable font defs: https://github.com/dhepper/font8x8
 
@@ -59,16 +55,13 @@ void setup() {
   Serial.println(F("Serial started..."));
   reportVCC();
 
-  // adding ths breaks the LED scroller (stays dark)
   start_menu();
 
   mx.begin();
   mx.clear();
   mx.control(MD_MAX72XX::INTENSITY, 1);
-  // mx.setPoint(8, 0, true); 
 }
 
-// size_t y_points_len = sizeof(y_points) / sizeof(y_points[0]);
 int sleep_time = 120;
 int pause_leadend_counter = 0;
 int leadend_pause = 100;
@@ -101,18 +94,17 @@ void setSpeed(int s) {
   sleep_time = s;
 }
 
-void setAll() {
-  // TODO put back later
-  //   for (uint8_t dev = 0; dev < MAX_DEVICES; dev++) {
-  //     for (uint8_t row = 0; row < 8; row++) {
-  //       for (uint8_t col = 0; col < 8; col++) {
-  //         mx.setPoint(row, col + (dev * 8), true);
-  //       }
-  //     }
-  // }
-}
+// void setAll() {
+//   // TODO put back later
+//     for (uint8_t dev = 0; dev < MAX_DEVICES; dev++) {
+//       for (uint8_t row = 0; row < 8; row++) {
+//         for (uint8_t col = 0; col < 8; col++) {
+//           mx.setPoint(row, col + (dev * 8), true);
+//         }
+//       }
+//   }
+// }
 
-// TODO can just omit ""? It's set later
 String change = "";
 
 // triggers method change
@@ -137,11 +129,10 @@ void loop() {
   loop_menu();
 
   if (loop_count < 2) { 
-    // this all looks good
-    Serial.println(methods[0].placeNotation);  // Check before any manipulation
-    Serial.println(methods[0].stage);  // Check before any manipulation
-    Serial.println(methods[0].title);  // Check before any manipulation
-    Serial.println(methods[1].placeNotation);  // Check before any manipulation
+    Serial.println(methods[0].placeNotation);
+    Serial.println(methods[0].stage);
+    Serial.println(methods[0].title);
+    Serial.println(methods[1].placeNotation);
 
     Serial.print(F("got stage: "));
     Serial.println(methods[selectedMethodIdx].stage);
