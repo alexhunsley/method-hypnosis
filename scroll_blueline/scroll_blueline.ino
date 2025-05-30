@@ -114,7 +114,7 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 100;
+int sleep_time = 175;
 int pause_leadend_counter = 0;
 int leadend_pause = 1000;
 int method_part = 0;

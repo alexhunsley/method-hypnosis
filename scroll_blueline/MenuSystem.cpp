@@ -157,8 +157,8 @@ bool registerActivity() {
 
 void handleSelection() {
   // TODO revert this, just to stop me having to unplug it all the time!
-  halt();
-  
+  // halt();
+
   if (registerActivity()) {
     // ignore selection if display was woken up
     return;
