@@ -164,7 +164,7 @@ char* copy_substring(const char* src, int start, int len) {
 
 void loop() {
   static int loop_count = 0;
-  PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
+  // PRINT_VAR(">>>>>>>> loop: count = ", loop_count);
   loop_count++;
 
   loop_menu();
@@ -229,22 +229,25 @@ void loop() {
 
   const char* pos = strchr(change, '8');
   int plotPos = (pos != NULL) ? (pos - change) : -1;
-  // plotPos = (plotPos + loop_count) % 8;
+  plotPos = (plotPos + loop_count) % 8;
   // PRINT_VAR("plotPos: ", plotPos);
 
   // TODO you might want plotPos on the y bit here, not x
-  mx.transform(MD_MAX72XX::TSL);  // Scroll up
-  // mx.setPoint(7 - plotPos, 0, true);
-  mx.setPoint(4, 0, true);
+  mx.transform(MD_MAX72XX::TSU);  // Scroll up
+
+  // mx.setPoint(4, 0, true);
+  // Y, inv X!
+  mx.setPoint(7, 7 - plotPos, true);
+
   mx.update();
 
-  for (uint8_t col = 0; col < mx.getColumnCount(); col++) {
-    byte b = mx.getColumn(col);
-    Serial.print("Col ");
-    Serial.print(col);
-    Serial.print(": ");
-    Serial.println(b, BIN);
-  }
+  // debug: show bitmap as in memory
+  // for (uint8_t col = 0; col < mx.getColumnCount(); col++) {
+  //   byte b = mx.getColumn(col);
+  //   PRINT_VAR("Col ", col);
+  //   PRINTF(": ");
+  //   Serial.println(b, BIN);
+  // }
 
   // // if (frame == 0 && invert) {
   // //   setAll();
