@@ -35,7 +35,11 @@ extern void halt();
 
 int lcdBrightness = 1;
 
-String leafScreenName = "";
+char* leafScreenName = "";
+
+#define MENU_BRIGHTNESS F("Brightness")
+#define MENU_SPEED F("Speed")
+#define MENU_METHOD F("Select method")
 
 // LCD and encoder setup
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -102,17 +106,24 @@ bool buttonPressed = false;
 // unsigned long rotaryDebounceStartTime = 0;
 // unsigned long rotaryDebounceDuration = 100;
 
+bool strcmp_PF(const char* ramString, const __FlashStringHelper* flashString) {
+  char temp[32];  // adjust size to fit longest expected string
+  strncpy_P(temp, (const char*)flashString, sizeof(temp));
+  temp[sizeof(temp) - 1] = '\0';  // ensure null-termination
+  return strcmp(ramString, temp) == 0;
+}
+
 void updateMenuDisplay() {
   lcd.clear();
   lcd.setCursor(0, 0);
-  if (leafScreenName != "") {
-    if (leafScreenName == "Brightness") {
+  if (!strcmp_PF(leafScreenName, "")) {
+    if (strcmp_PF(leafScreenName, MENU_BRIGHTNESS)) {
       lcd.print(F("   Brightness"));
       lcd.setCursor(0, 1);
       lcd.print(F("       "));
       lcd.print(lcdBrightness);
     }
-    else if (leafScreenName == "Speed") {
+    else if (strcmp_PF(leafScreenName, MENU_SPEED)) {
       lcd.print(F("   Scroll speed"));
       lcd.setCursor(0, 1);
       lcd.print(F("       "));
