@@ -4,6 +4,8 @@
 #include <SPI.h>
 #include "MenuSystem.h"
 
+// #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 //
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
 // Just wire it up to the 5 pins given in the instructions.
@@ -27,17 +29,24 @@
 MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 // MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, CS_PIN, MAX_DEVICES);
 
+const String rounds = "1234567890";
+
 struct Method {
-  const char* title;
-  const char* placeNotation;
+  String title;
+  String placeNotation;
+  const int stage;
 };
 
-Method methods[] = {{"Bristol", "x58x14.58x58.36.14x14.58x14x18,18"},
-                    {"Double Norwich", "x14x36x58x18,18"}};
+Method methods[] = {
+                    // {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
+                    // {"Bristol", "x58x14.58x58.36.14x14.58x14x18", 8},
+                    {"Bristol", "1234x18x,12", 8},
+                    {"Double Norwich", "x14x36x58x18,18", 8}
+                   };
 
 
-const int MAX_TOKENS = 64; // expanded PN chars
-int selectedMethodIdx = 1;
+const int MAX_TOKENS = 24; // expanded PN chars
+int selectedMethodIdx = 0;
 int selectedMethodPNCount = 0;
 // String expandedPN = "";
 
@@ -47,7 +56,8 @@ int frame = 0;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Serial started...");
+  Serial.println(F("Serial started..."));
+  reportVCC();
 
   // adding ths breaks the LED scroller (stays dark)
   start_menu();
@@ -64,6 +74,24 @@ int pause_leadend_counter = 0;
 int leadend_pause = 100;
 int method_part = 0;
 bool invert = false;
+
+long readVcc() {
+  // Read 1.1V reference against AVcc
+  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);  // Select 1.1V (VBG) input
+  delay(2); // Let voltage settle
+  ADCSRA |= _BV(ADSC);  // Start conversion
+  while (bit_is_set(ADCSRA, ADSC));
+
+  int result = ADC;
+  long vcc = 1125300L / result;  // 1.1V * 1023 * 1000
+  return vcc;  // in millivolts
+}
+
+void reportVCC() {
+  Serial.print(F("Vcc = "));
+  Serial.print(readVcc());
+  Serial.println(F(" mV"));
+}
 
 void setBrightness(int b) {
   mx.control(MD_MAX72XX::INTENSITY, b);
@@ -84,83 +112,149 @@ void setAll() {
   // }
 }
 
-String expandedPN[MAX_TOKENS];
+// TODO can just omit ""? It's set later
+String change = "";
+
+// triggers method change
+void setMethodIndex(int methodIndex) {
+  selectedMethodIdx = methodIndex;
+  // do this last! (but maybe mono-threaded, anyway)
+  selectedMethodPNCount = 0;
+}
+
+void printStringArray(String stringArr[], int count) {
+    for (int i = 0; i < count; i++) {
+      Serial.println(stringArr[i]);
+    }
+}
 
 void loop() {
+  static int loop_count = 0;
+  // Serial.print(">>>>>>>> loop: count = ");
+  // Serial.println(loop_count);
+  loop_count++;
+
   loop_menu();
 
-  if (selectedMethodPNCount == 0) {
-    // RECENT I removed & from the below.
+  if (loop_count < 2) { 
+    // this all looks good
+    Serial.println(methods[0].placeNotation);  // Check before any manipulation
+    Serial.println(methods[0].stage);  // Check before any manipulation
+    Serial.println(methods[0].title);  // Check before any manipulation
+    Serial.println(methods[1].placeNotation);  // Check before any manipulation
+
+    Serial.print(F("got stage: "));
+    Serial.println(methods[selectedMethodIdx].stage);
+
+    change = rounds.substring(0, methods[selectedMethodIdx].stage);
+    // change = rounds.substring(0, 8);
+
+    Serial.print(F("made start rounds change: "));
+    Serial.println(change);
+
+    String expandedPN[MAX_TOKENS];
+    // calling this seems to corrupt stuff!
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
-    Serial.println("Processing the PN....");
-    // Serial.println(expandedPN);
+
+    Serial.print(F("selectedPN count: "));
+    Serial.println(selectedMethodPNCount);
+    Serial.print(F("PNs: "));
+    for (uint8_t i = 0; i < selectedMethodPNCount; i++) {
+      Serial.println(expandedPN[i]);
+    }
+    Serial.print(F(" --- DONE"));
+
   }
 
+// start comment out
+  // // TODO we change selectedMethodIdx and do "selectedMethodPNCount = 0" to trigger this again
+  // // on user method change
+  // if (selectedMethodPNCount == 0) {
 
+  //   // RECENT I removed & from the below.
+  //   Serial.println("Processing the new PN.... (should only happen at start and once per method change)");
+    
+  //   Serial.print("methods[selectedMethodIdx].placeNotation is: ");
+  //   Serial.println(methods[selectedMethodIdx].placeNotation);
+  //   Serial.print("-- FINI2");
 
-  // if (frame == 0 && invert) {
-  //   setAll();
+  //   selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
+  //   // Serial.print("... and the new pn count: ");
+  //   // Serial.println(selectedMethodPNCount);
+
+  //   // Serial.print("Expanded PN: ");
+  //   // // Serial.println(expandedPN);
+  //   // // printStringArray(expandedPN, ARRAY_LEN(expandedPN));
+  //   // Serial.print("First array item: ");
+  //   // Serial.println(expandedPN[0]);
   // }
 
-  // // mx.setPoint(0, 0, true); 
-  // mx.setPoint(frame % 8, frame / 8, !invert); 
 
-  // mx.update();
-  // frame = (frame + 1) % 64;
-  // if (frame == 0) {
-  //   invert = !invert;
-  //   if (!invert) {
-  //       mx.clear();
-  //   }
-  // }
-  // delay(sleep_time);
+  // // if (frame == 0 && invert) {
+  // //   setAll();
+  // // }
+
+  // // // mx.setPoint(0, 0, true); 
+  // // mx.setPoint(frame % 8, frame / 8, !invert); 
+
+  // // mx.update();
+  // // frame = (frame + 1) % 64;
+  // // if (frame == 0) { 
+  // //   invert = !invert;
+  // //   if (!invert) {
+  // //       mx.clear();
+  // //   }
+  // // }
+  // // delay(sleep_time);
 
   
-  // static int scrollPos = MAX_DEVICES * 8;
-  static int methodPos = 0;
-String change = "12345678";
+  // // static int scrollPos = MAX_DEVICES * 8;
+  // static int methodPos = 0;
 
-  // mx.clear();
+  // // mx.clear();
 
+
+  // // mx.update();
+  // // delay(sleep_time * 3);
+
+  // // with cable going into LEDs at top:
+  // // x goes right, y goes down.
+  // // int x = 1;
+  // // int y = 0;
+  // // mx.setPoint(x, y, true);
+
+  // // TODO scroll the display!
+
+  // // for (uint8_t y = 0; y < MAX_DEVICES * 8; y++) {
+  // //   // int y = methodPos - col;
+
+  // //   // if (y >= 0 && y < (MAX_DEVICES * 8)) {
+  // //     uint8_t x = y_points[(y + methodPos) % y_points_len];
+  // //     if (x < 8) {
+  // //       mx.setPoint(x, y, true);
+  // //     }
+  // //   // }
+  // // // }
+  // // }
+
+  // mx.transform(MD_MAX72XX::TSL);  // Scroll up
+  // // int plotPos = 4;
+  // int plotPos = change.indexOf("8");
+  // // TODO you might want plotPos on the y bit here, not x
+  // mx.setPoint(plotPos, 0, true);
+
+  // // change = apply_place_notation(change, String(expandedPN[methodPos]));
+  // change = apply_place_notation(change, expandedPN[methodPos]);
+  // Serial.print("Change: ");
+  // Serial.println(change);
+
+  // // mx.setPoint(1, 0, true);
+
+  // methodPos = (methodPos + 1) % selectedMethodPNCount;
 
   // mx.update();
-  // delay(sleep_time * 3);
+  // END comment out
 
-  // with cable going into LEDs at top:
-  // x goes right, y goes down.
-  // int x = 1;
-  // int y = 0;
-  // mx.setPoint(x, y, true);
-
-  // TODO scroll the display!
-
-  // for (uint8_t y = 0; y < MAX_DEVICES * 8; y++) {
-  //   // int y = methodPos - col;
-
-  //   // if (y >= 0 && y < (MAX_DEVICES * 8)) {
-  //     uint8_t x = y_points[(y + methodPos) % y_points_len];
-  //     if (x < 8) {
-  //       mx.setPoint(x, y, true);
-  //     }
-  //   // }
-  // // }
-  // }
-
-// TODO put back later
-  // mx.transform(MD_MAX72XX::TSL);  // Scroll up
-
-  // int plotPos = change.indexOf("8");
-  int plotPos = 4;
-  mx.setPoint(plotPos, 0, true);
-
-  change = apply_place_notation(change, String(expandedPN[methodPos]));
-  Serial.println(change);
-
-  // mx.setPoint(1, 0, true);
-
-  methodPos = (methodPos + 1) % selectedMethodPNCount;
-
-  mx.update();
   delay(sleep_time);
 
   // if (pause_leadend_counter > 0) {
@@ -179,16 +273,34 @@ String change = "12345678";
 ////////////////////////////////////////////////////
 //    NEW CODE for new PN per row approach
 
-int parse_place_notation_sequence(const String& seq, String result[]) {
+// USE F STRINGS!!!! otherwise corruption. WTF!
+int parse_place_notation_sequence(const String& placeNotation, String placeNotates[]) {
   String current = "";
   String forward[MAX_TOKENS];
   int forwardCount = 0;
   int resultCount = 0;
 
-  for (unsigned int i = 0; i < seq.length(); i++) {
-    char c = seq[i];
+  Serial.print(F("DEBUG placeNotation: '"));
+  Serial.print(placeNotation);
+  Serial.println("'");
+
+  // is ok: 
+  // Serial.print(F("parse_place_notation_sequence: placeNotation = "));
+  // Serial.println(placeNotation);
+  // Serial.println(F("-FINI"));
+  
+  for (unsigned int i = 0; i < placeNotation.length(); i++) {
     
+    char c = placeNotation[i];
+
+    // is ok
+    // Serial.print(F("i: "));
+    // Serial.println(i);
+    // Serial.print(F("c: "));
+    // Serial.println(c);
+
     if (c == ',') {
+      Serial.println(F("ALAL Found ,"));
       if (current.length() > 0) {
         forward[forwardCount++] = current;
         current = "";
@@ -196,17 +308,19 @@ int parse_place_notation_sequence(const String& seq, String result[]) {
 
       // Append forward to result
       for (int j = 0; j < forwardCount; j++) {
-        result[resultCount++] = forward[j];
+        placeNotates[resultCount++] = forward[j];
       }
 
       // Append reversed forward (excluding the first item in reverse)
       for (int j = forwardCount - 2; j >= 0; j--) {
-        result[resultCount++] = forward[j];
+        placeNotates[resultCount++] = forward[j];
       }
 
       forwardCount = 0; // Clear forward
     }
     else if (c == '.' || c == 'x') {
+      Serial.print(F("ALAL Got . or x"));
+
       if (current.length() > 0) {
         forward[forwardCount++] = current;
         current = "";
@@ -217,22 +331,48 @@ int parse_place_notation_sequence(const String& seq, String result[]) {
     }
     else {
       current += c;
+      Serial.print(F("ALAL Append simple notate char: "));
+      Serial.println(c);
+      Serial.print(F("ALAL  which has len: "));
+      Serial.println(current.length());
     }
   }
 
+  Serial.print(F("ALAL FINAL current: '"));
+  Serial.print(current);
+  Serial.print(F("' (len = "));
+  Serial.print(current.length());
+  Serial.println(F(")"));
+
   if (current.length() > 0) {
-    forward[forwardCount++] = current;
+      Serial.print(F("ALAL Assign current to forward: "));
+      Serial.println(current);
+      forward[forwardCount++] = current;
   }
 
   // Append remaining forward to result
   for (int j = 0; j < forwardCount; j++) {
-    result[resultCount++] = forward[j];
+    Serial.print(F("ALAL append forward to notates arr: "));
+    Serial.print(forward[j]);
+    Serial.println();
+
+    placeNotates[resultCount++] = forward[j];
   }
+
+  Serial.print("PN array count: ");
+  Serial.println(resultCount);
+  Serial.print("PN: ");
+  printStringArray(placeNotates, ARRAY_LEN(placeNotates));
 
   return resultCount;  // Return the number of elements stored in result[]
 }
 
 String apply_place_notation(String row, String notation) {
+  Serial.print(F("Row: "));
+  Serial.println(row);
+  Serial.print(F("Notation: "));
+  Serial.println(notation);
+  
   int len = row.length();
 
   if (notation == "x") {

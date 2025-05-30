@@ -229,10 +229,11 @@ void loop_menu() {
 
     long newRotaryPosition = encoder.read() / 4;  // divide by 4 to debounce steps
 
-    if (debug_tick == 0) {
-      Serial.println(newRotaryPosition); 
-    }
-    debug_tick = (debug_tick + 1) % 10;
+    // if (debug_tick == 0) {
+    //   Serial.print("Rot pos: ");
+    //   Serial.println(newRotaryPosition); 
+    // }
+    // debug_tick = (debug_tick + 1) % 10;
 
     if (newRotaryPosition != lastRotaryPosition) {
       Serial.print(">>>>>>> Change in pos detected: ");
