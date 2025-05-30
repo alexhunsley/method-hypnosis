@@ -27,11 +27,20 @@
 MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 // MD_MAX72XX mx = MD_MAX72XX(MD_MAX72XX::FC16_HW, CS_PIN, MAX_DEVICES);
 
+#define MAX_METHOD_TITLE_LENGTH 16
+// enough for bristol if using ',' to reverse
+#define MAX_METHOD_PLACE_NOTATION_LENGTH 40
+// place notation array
+#define MAX_TOKENS 32
+// can handle max 4 char notate like 1256 (the last char is for
+// null temrinator; could get rid of need for that eventually with helper func)
+#define MAX_TOKEN_LENGTH 5
+
 const String rounds = "1234567890";
 
 struct Method {
-  String title;
-  String placeNotation;
+  char title[MAX_METHOD_TITLE_LENGTH];
+  char placeNotation[MAX_METHOD_PLACE_NOTATION_LENGTH];
   const int stage;
 };
 
@@ -43,11 +52,6 @@ Method methods[] = {
                    };
 
 
-// place notation array
-#define MAX_TOKENS 32
-// can handle max 4 char notate like 1256 (the last char is for
-// null temrinator; could get rid of need for that eventually with helper func)
-#define MAX_TOKEN_LENGTH 5
 
 int selectedMethodIdx = 0;
 int selectedMethodPNCount = 0;
@@ -150,7 +154,8 @@ void loop() {
     Serial.print(F("made start rounds change: "));
     Serial.println(change);
 
-    String expandedPN[MAX_TOKENS];
+    char expandedPN[MAX_TOKENS][MAX_TOKEN_LENGTH];
+
     // calling this seems to corrupt stuff!
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
 
@@ -273,12 +278,8 @@ void loop() {
 
 // USE F STRINGS!!!! otherwise corruption. WTF!
 // Constants for sizes
-#define MAX_TOKENS 16
-#define MAX_TOKEN_LENGTH 12
-
-// Constants for sizes
-#define MAX_TOKENS 16
-#define MAX_TOKEN_LENGTH 12
+// #define MAX_TOKENS 16
+// #define MAX_TOKEN_LENGTH 12
 
 int parse_place_notation_sequence(const char* placeNotation, char placeNotates[][MAX_TOKEN_LENGTH]) {
   char current[MAX_TOKEN_LENGTH];
