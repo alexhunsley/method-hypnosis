@@ -89,33 +89,19 @@ void loop() {
   loop_menu();
 
   if (selectedMethodPNCount == 0) {
-    // pause_leadend_counter = 0;
     loop_count = 0;
-    // PRINTF("INIT METHOD!!!!!!!!!!!!!!!!!!!");
     memcpy(change, rounds, methods[selectedMethodIdx].stage);
     change[methods[selectedMethodIdx].stage] = '\0';
     selectedMethodPNCount = parse_place_notation_sequence(methods[selectedMethodIdx].placeNotation, expandedPN);
     selectedMethodTargetBell = '0' + methods[selectedMethodIdx].stage;
-    // PRINT_VAR("resultCount B : ", selectedMethodPNCount);
     mx.clear();
   }
-
-  // debug: show bitmap as in memory
-  // for (uint8_t col = 0; col < mx.getColumnCount(); col++) {
-  //   byte b = mx.getColumn(col);
-  //   PRINT_VAR("Col ", col);
-  //   PRINTF(": ");
-  //   Serial.println(b, BIN);
-  // }
 
   if (pause_leadend_counter > 0) {
     pause_leadend_counter--;
   }
   else {
-    // scroll display
-    // const char* pos = strchr(change, TARGET_BELL);
     const char* pos = strchr(change, selectedMethodTargetBell);
-
 
     int plotPos = (pos != NULL) ? (pos - change) : 0;
     mx.transform(MD_MAX72XX::TSU);  // Scroll up
@@ -124,14 +110,9 @@ void loop() {
 
     PRINT_VAR("Not in pause, loop_count++ to ", loop_count);
 
-    // if ((loop_count % selectedMethodPNCount) == selectedMethodPNCount - 1) {
     int pnIndex = loop_count % selectedMethodPNCount;
-    // `change` is modified in-place
     apply_place_notation(change, expandedPN[pnIndex]);
     loop_count++;
-    // if (loop_count > selectedMethodPNCount && (loop_count % selectedMethodPNCount) == 1) {
-    //   pause_leadend_counter = leadend_pause / sleep_time;
-    // }
   }
   delay(blueline_sleep_time);
 }
