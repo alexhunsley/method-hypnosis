@@ -58,14 +58,13 @@ void updateBellPosCharOrig(char *posChar, char* notate) {
   } \
 } while (0)
 
-// GPT suggests:
-void updateBellPosChar(char *p, char *n) {
+void updateBellPosChar(char *pos, char *notate) {
     // char origChar = *p;
     // char* origNotate = n;
-  char *s = n;
-  while (*n < *p && *n) n++; // step over notate until find a place >= to our bell position
-  if (*n == *p) return; // if making a place, do nothing
-  *p += ((n - s) ^ (*p - '1')) & 1 ? -1 : 1; // step left or right based on parity
+  char *startNotate = notate;
+  while (*notate < *pos && *notate) notate++; // step over notate until find a place >= to our bell position or '\0'
+  if (*notate == *pos) return; // if making a place, do nothing
+  *pos += ((notate - startNotate) ^ (*pos - '1')) & 1 ? -1 : 1; // step left or right based on parity
     // printf("pos: %c  PN: %s  updated pos: %c\n", origChar, origNotate, *p);
 }
 
