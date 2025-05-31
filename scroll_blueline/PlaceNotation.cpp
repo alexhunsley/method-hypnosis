@@ -5,11 +5,16 @@
 ////////////////////////////////////////////////////
 //    NEW CODE for new PN per row approach
 
-// USE F STRINGS!!!! otherwise corruption. WTF!
-// Constants for sizes
-// #define MAX_TOKENS 16
-// #define MAX_TOKEN_LENGTH 12
+// update bell pos like '1' using a notate like '14' or 'x'.
 
+void updateBellPosChar(char *p, char *n) {
+  char *s = n;
+  while (*n < *p && *n) n++; // step over notate until find a place >= to our bell position
+  if (*n == *p) return; // if making a place, do nothing
+  *p += ((n - s) ^ (*p - '1')) & 1 ? -1 : 1; // step left or right based on parity
+}
+
+// this can be written more efficiently, I'm sure
 int parse_place_notation_sequence(const char* placeNotation, char placeNotates[][MAX_TOKEN_LENGTH]) {
   char current[MAX_TOKEN_LENGTH];
   int currentLen = 0;
@@ -134,16 +139,5 @@ void apply_place_notation(char* row, const char* notation) {
   }
   row[i] = '\0';
   PRINT_VAR("End of PN processing, got row = ", row);
-}
-
-// update bell pos like '1' using a notate like '14' or 'x'.
-void updateBellPosChar(char *posChar, char* notate) {
-  // char origChar = *posChar;
-  char* ptr = notate;
-  while (*ptr < *posChar && *ptr != '\0') { ptr++; }
-  if (*ptr == *posChar) { return; }  // place being made
-  unsigned char parity = ((ptr - notate) ^ (*posChar - '1')) % 2; // ok this simplification seems to work (moving out the common %2):
-  *posChar -= parity * 2 - 1;  // left or right movement
-  // printf("pos: %c  PN: %s  updated pos: %c\n", origChar, notate, *posChar);
 }
 
