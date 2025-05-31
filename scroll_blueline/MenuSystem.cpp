@@ -3,6 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Encoder.h>
 #include <MD_MAX72xx.h>
+#include "util.h"
 
 // TO FIX
 // when coming out a sub menu like methods, there's an auto-scroll and the upper menu changes its selection, causing a visual jump
