@@ -5,6 +5,7 @@
 #include "MenuSystem.h"
 #include "util.h"
 #include "PlaceNotation.h"
+#include "scroll_blueline.h"
 
 // this script runs on the 4x1 LED panels from AZDelivery (it's 4 8x8 LEDs next to each other)
 // Just wire it up to the 5 pins given in the instructions.
@@ -44,6 +45,8 @@ const Method methods[] = {
                       {"Double Norwich", "x14x36x58x18,18", 8},
                     };
 
+extern int blueline_sleep_time = 75;
+
 int selectedMethodIdx = 2;
 int selectedMethodPNCount = 0;
 int selectedMethodTargetBell = 2;
@@ -67,26 +70,10 @@ void setup() {
   mx.control(MD_MAX72XX::INTENSITY, 1);
 }
 
-int sleep_time = 75;
 int pause_leadend_counter = 0;
 int leadend_pause = 1000;
 int method_part = 0;
 bool invert = false;
-
-void setBrightness(int b) {
-  mx.control(MD_MAX72XX::INTENSITY, b);
-}
-
-void setSpeed(int s) {
-  sleep_time = s;
-}
-
-// triggers method change
-void setMethodIndex(int methodIndex) {
-  selectedMethodIdx = methodIndex;
-  // do this last! (but maybe mono-threaded, anyway)
-  selectedMethodPNCount = 0;
-}
 
 void loop() {
   static int loop_count = 0;
@@ -146,5 +133,5 @@ void loop() {
     //   pause_leadend_counter = leadend_pause / sleep_time;
     // }
   }
-  delay(sleep_time);
+  delay(blueline_sleep_time);
 }
