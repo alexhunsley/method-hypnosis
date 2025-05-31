@@ -9,15 +9,15 @@
 // TO FIX
 // when coming out a sub menu like methods, there's an auto-scroll and the upper menu changes its selection, causing a visual jump
 
-byte smiley[8] = {
-  B00000,
-  B01010,
-  B00000,
-  B00000,
-  B10001,
-  B01110,
-  B00000,
-};
+// byte smiley[8] = {
+//   B00000,
+//   B01010,
+//   B00000,
+//   B00000,
+//   B10001,
+//   B01110,
+//   B00000,
+// };
 
 byte bell[8] = {
   B00000,
@@ -231,7 +231,7 @@ void start_menu() {
   lcd.init();
   lcd.backlight();
 
-  lcd.createChar(0, smiley);
+  // lcd.createChar(0, smiley);
   lcd.createChar(1, bell);
 
   encoder.write(0);
