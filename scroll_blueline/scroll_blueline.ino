@@ -45,7 +45,7 @@ const Method methods[] = {
                       {"Double Norwich", "x14x36x58x18,18", 8},
                     };
 
-extern int blueline_sleep_time = 75;
+int blueline_sleep_time = 75;
 
 int selectedMethodIdx = 2;
 int selectedMethodPNCount = 0;
