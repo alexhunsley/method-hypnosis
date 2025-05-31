@@ -40,8 +40,6 @@ struct Method {
 
 const Method methods[] = {
                       {"Bristol", "x58x14.58x58.36.14x14.58x14x18,18", 8},
-                      // {"Bristol", "x58x14.58x58.36.14x14.58x14x18", 8},
-                      // {"Bristol", "1234x18x,12", 8},
                       {"Stedman", "3.1.7.3.1.3,1", 7},
                       {"Double Norwich", "x14x36x58x18,18", 8},
                     };
