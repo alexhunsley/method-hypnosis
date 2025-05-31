@@ -1794,6 +1794,16 @@
 		)
 		(uuid "1455bfa9-6e02-485a-a43c-aef052c39216")
 	)
+	(text "res"
+		(exclude_from_sim no)
+		(at 191.516 111.76 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "14d61ce6-b2d3-490b-93fc-9a2984d7c0c5")
+	)
 	(text "NOT FOR LAYOUT/FAB\nThis is connectivity documentation"
 		(exclude_from_sim no)
 		(at 180.848 173.736 0)
@@ -1825,6 +1835,16 @@
 		)
 		(uuid "61f1348f-469c-4a52-a658-dac700f09e20")
 	)
+	(text "res"
+		(exclude_from_sim no)
+		(at 174.244 109.22 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "76f1c9c9-5d2e-448f-99ed-bdece5355098")
+	)
 	(text "CABLE AND\nCONNECTOR"
 		(exclude_from_sim no)
 		(at 180.848 96.266 0)
@@ -1855,6 +1875,16 @@
 		)
 		(uuid "8fbf8134-6760-45e8-b76e-dc406a663c1f")
 	)
+	(text "res"
+		(exclude_from_sim no)
+		(at 191.516 109.22 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "9a29cc68-0281-4657-9efa-b55e8fa3f6b9")
+	)
 	(text "SCROLLER ASSEMBLY"
 		(exclude_from_sim no)
 		(at 118.11 81.788 0)
@@ -1875,6 +1905,18 @@
 		)
 		(uuid "b04ac259-7403-43ba-b6e4-b3f602232b62")
 	)
+	(text "APin PIN  colour   func   belongs to\n----------------------------------------\n     1    red      +5V    power\nD2   2    brown    CLK    rotary switch\n     3    yellow          reserved\nD3   4    orange   DT     rotary switch\nA4   5    blue     SDA    i2c 16x2 LED text\nD4   6    green    SW     rotary switch\nA5   7    grey     SCL    i2c 16x2 LED text\n     8    purple          reserved\n     9    black    GND    power\n     10   white           reserved\n\nLED display:\n\nCLK  D13\nCS   D10\nDIN  D11\n"
+		(exclude_from_sim no)
+		(at 168.91 49.53 0)
+		(effects
+			(font
+				(face "Courier New")
+				(size 2.032 2.032)
+			)
+			(justify left)
+		)
+		(uuid "d13a07ac-82ab-48d5-88f5-e4d97d04aa98")
+	)
 	(text "res"
 		(exclude_from_sim no)
 		(at 113.284 109.22 0)
@@ -1884,6 +1926,17 @@
 			)
 		)
 		(uuid "de06ad1b-d99e-4235-8365-d6c44fc53ae9")
+	)
+	(text "2025-05-24\nsweet tin adventure: tried making a little board to share power (+VE and GND)\nbut it was a nightmare, given the male/female bus cables are really shitty wire\nthat just breaks incredibly easily. \n\nNext time:\nGo with idea of making a 1:2 splitter male <-> female for +ve and gnd, then\nno need for soldering bullshit in the sweet tin.\n\nTODO: on nano, solder top line of the ribbon connector pins to the board.\n"
+		(exclude_from_sim no)
+		(at 21.336 41.91 0)
+		(effects
+			(font
+				(size 2.032 2.032)
+			)
+			(justify left)
+		)
+		(uuid "f3b68db9-7348-4003-8a4b-11bf287f1add")
 	)
 	(junction
 		(at 229.87 127)
