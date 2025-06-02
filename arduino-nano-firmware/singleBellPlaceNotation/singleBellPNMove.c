@@ -1,4 +1,24 @@
 #include <stdio.h>
+#include <string.h>
+
+#define MAX_TOKENS 32
+#define MAX_TOKEN_LENGTH 5
+
+void concatenate_tokens(char tokens[MAX_TOKENS][MAX_TOKEN_LENGTH], int tokenCount, char* result, int resultSize) {
+    static char* SEPARATOR = "|";
+
+    result[0] = '\0';
+
+    for (int i = 0; i < tokenCount; i++) {
+        if (strlen(result) + strlen(tokens[i]) + 1 < resultSize) {
+            strcat(result, tokens[i]);
+            strcat(result, SEPARATOR);
+        } else {
+            // prevent buffer overflow
+            break;
+        }
+    }
+}
 
 void updateBellPosCharOrig(char *posChar, char* notate) {
   char origChar = *posChar;
@@ -58,6 +78,15 @@ void updateBellPosCharOrig(char *posChar, char* notate) {
   } \
 } while (0)
 
+#define ASSERT_STREQ(expected, actual) do { \
+  if (strcmp((expected), (actual)) != 0) { \
+    printf("  ******* ASSERT_STREQ failed: %s != %s (\"%s\" != \"%s\")\n", \
+           #expected, #actual, (expected), (actual)); \
+  } else { \
+    printf("PASS: %s == %s (\"%s\")\n", #expected, #actual, (expected)); \
+  } \
+} while (0)
+
 void updateBellPosChar(char *pos, char *notate) {
     // char origChar = *p;
     // char* origNotate = n;
@@ -68,12 +97,114 @@ void updateBellPosChar(char *pos, char *notate) {
     // printf("pos: %c  PN: %s  updated pos: %c\n", origChar, origNotate, *p);
 }
 
+int parse_place_notation_sequence(const char* placeNotation, char placeNotates[MAX_TOKENS][MAX_TOKEN_LENGTH]) {
+  char current[MAX_TOKEN_LENGTH];
+  int currentLen = 0;
+
+  char forward[MAX_TOKENS][MAX_TOKEN_LENGTH];
+  int forwardCount = 0;
+  int resultCount = 0;
+
+  // PRINTF("DEBUG placeNotation: ");
+  // PRINTLN(placeNotation);
+
+  for (unsigned int i = 0; placeNotation[i] != '\0'; i++) {
+    char c = placeNotation[i];
+
+    if (c == ',') {
+      // PRINTFLN("ALAL Found ,");
+
+      if (currentLen > 0) {
+        current[currentLen] = '\0';
+        if (forwardCount < MAX_TOKENS) {
+          strcpy(forward[forwardCount++], current);
+        }
+        currentLen = 0;
+      }
+
+      for (int j = 0; j < forwardCount; j++) {
+        if (resultCount < MAX_TOKENS) {
+          strcpy(placeNotates[resultCount++], forward[j]);
+        }
+      }
+      for (int j = forwardCount - 2; j >= 0; j--) {
+        if (resultCount < MAX_TOKENS) {
+          strcpy(placeNotates[resultCount++], forward[j]);
+        }
+      }
+      forwardCount = 0;
+    }
+    else if (c == '.' || c == 'x') {
+      // PRINTFLN("ALAL Got . or x");
+
+      if (currentLen > 0) {
+        current[currentLen] = '\0';
+        if (forwardCount < MAX_TOKENS) {
+          strcpy(forward[forwardCount++], current);
+        }
+        currentLen = 0;
+      }
+
+      if (c == 'x') {
+        if (forwardCount < MAX_TOKENS) {
+          strcpy(forward[forwardCount++], "x");
+        }
+      }
+    }
+    else {
+      if (currentLen < MAX_TOKEN_LENGTH - 1) {
+        current[currentLen++] = c;
+        current[currentLen] = '\0';
+      }
+      // PRINT_VAR("ALAL Append simple notate char: ", c);
+      // PRINT_VAR("ALAL  which has len: ", currentLen);
+    }
+  }
+
+  // PRINT_VAR("ALAL FINAL current: ", current);
+  // PRINT_VAR(" len = ", currentLen);
+
+  if (currentLen > 0) {
+    current[currentLen] = '\0';
+    if (forwardCount < MAX_TOKENS) {
+      strcpy(forward[forwardCount++], current);
+    }
+  }
+
+  for (int j = 0; j < forwardCount; j++) {
+    // PRINT_VAR("ALAL append forward to notates arr: ", forward[j]);
+
+    if (resultCount < MAX_TOKENS) {
+      strcpy(placeNotates[resultCount++], forward[j]);
+    }
+  }
+
+  // PRINT_VAR("PN array count: ", resultCount);
+  //
+  // for (int i = 0; i < resultCount; i++) {
+  //   PRINTLN(placeNotates[i]);
+  // }
+
+  return resultCount;
+}
+
+void assert_expanded_place_notation(const char* placeNotation, char* expected) {
+  char result[255];
+  char placeNotates[MAX_TOKENS][MAX_TOKEN_LENGTH];
+
+  int token_count = parse_place_notation_sequence(placeNotation, placeNotates);
+
+  concatenate_tokens(placeNotates, token_count, result, 255);
+
+  ASSERT_STREQ(result, expected);
+}
+
 char h(char p, char *n) {
   updateBellPosChar(&p, n);
   return p;
 }
 
-int main() {
+void test_notate_row_processing() {
   // NOTE: we don't take the stage into account.
   // So stage 7, 'x' would cause '7' to become '8'.
 
@@ -118,6 +249,20 @@ int main() {
 
   ASSERT_EQ(h('1', "3"), '2');
   ASSERT_EQ(h('2', "3"), '1');
+}
+
+void test_expand_place_notation() {
+  // note the "|" placed between resulting notates, for convenience
+  assert_expanded_place_notation("", "");
+  assert_expanded_place_notation("x", "x|");
+  assert_expanded_place_notation(".", "");
+  assert_expanded_place_notation("18", "18|");
+  assert_expanded_place_notation("18,12", "18|12|");
+  assert_expanded_place_notation("18x38,12", "18|x|38|x|18|12|");
+  assert_expanded_place_notation("x12x14,34", "x|12|x|14|x|12|x|34|");
+}
+
+void generate_single_bell_blueline() {
 
   // 
   //  - don't test this. Just assume we will never use x on odd stage and PN is reasonably well formed.
@@ -150,7 +295,13 @@ int main() {
     }
     // printf("*\n");
     printf("%c\n", b);
-  }
+  }  
+}
+
+int main() {
+  // test_notate_row_processing();
+  // generate_single_bell_blueline();
+  test_expand_place_notation();
   return 0;
 }
 
