@@ -160,8 +160,8 @@ void updateMenuDisplay() {
 ///////////////////////////////////////////////
 // LCD display sleep
 unsigned long lastActivityTime = 0;
-const unsigned long inactivityTimeout = 30000;
-const unsigned long sleepMessageDuration = 3000;
+const unsigned long inactivityTimeout = 15000;
+const unsigned long sleepMessageDuration = 2000;
 unsigned long sleepMessageStart = 0;
 const String sleepMessage = "  Sleeping...";
 
@@ -217,7 +217,7 @@ void handleSelection() {
     PRINT("CCC a leaf...");
 
     if (currentMenu == &methodsMenu) {
-      PRINT_VAR("HAROOOOO! METHOD SEL: ", currentMenuIndex);
+      // PRINT_VAR("HAROOOOO! METHOD SEL: ", currentMenuIndex);
       // TODO need order of method items to match what is defined in scroll_blueino.ino.
       // Fix this properly later.
       setMethodIndex(currentMenuIndex);
@@ -227,15 +227,6 @@ void handleSelection() {
     else {
       leafScreenName = selected->label;
     }
-    // updateMenuDisplay();
-
-    // lcd.clear();
-    // lcd.setCursor(0, 0);
-    // lcd.print("Selected:");
-    // lcd.setCursor(0, 1);
-    // lcd.print(selected->label);
-    // // TODO this is not good! but is temp code, anyway
-    // delay(1000);
   }
 
   // does this need doing at all? try without
@@ -312,20 +303,21 @@ void loop_menu() {
     }
   // // }
 
-  // if (!displayIsOff && sleepMessageStart == 0 && millis() - lastActivityTime > inactivityTimeout) {
-  //   lcd.clear();
-  //   lcd.setCursor(0, 0);
-  //   lcd.print(sleepMessage);
-  //   sleepMessageStart = millis();
-  //   Serial.println("<< DISPLAY about to sleep... >>");
-  // }
-  // if (sleepMessageStart > 0 && millis() - sleepMessageStart > sleepMessageDuration) {
-  //   sleepMessageStart = 0;
-  //   displayIsOff = true;
-  //   lcd.noBacklight();
-  //   lcd.noDisplay();
-  //   Serial.println("<< DISPLAY SLEPT >>");
-  // }
+  if (!displayIsOff && sleepMessageStart == 0 && millis() - lastActivityTime > inactivityTimeout) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(sleepMessage);
+    sleepMessageStart = millis();
+    PRINT("<< DISPLAY about to sleep... >>");
+  }
+  if (sleepMessageStart > 0 && millis() - sleepMessageStart > sleepMessageDuration) {
+    sleepMessageStart = 0;
+    displayIsOff = true;
+    lcd.noBacklight();
+    lcd.noDisplay();
+    PRINT("<< DISPLAY SLEPT >>");
+  }
+
   if (digitalRead(buttonPin) == LOW && !buttonPressed) {
     Serial.println(F("<< button pressed"));
     buttonPressed = true;
