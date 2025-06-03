@@ -108,8 +108,6 @@ void loop() {
     mx.setPoint(7, 7 - plotPos, true);
     mx.update();
 
-    PRINT_VAR("Not in pause, loop_count++ to ", loop_count);
-
     int pnIndex = loop_count % selectedMethodPNCount;
     apply_place_notation(change, expandedPN[pnIndex]);
     loop_count++;

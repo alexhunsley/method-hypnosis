@@ -15,7 +15,10 @@ inline void setSpeed(int s) {
   blueline_sleep_time = s;
 }
 
+// NB value is clamped before we get in here
 inline void setBrightness(int b) {
+  Serial.print(F("BR: "));
+  Serial.println(b);
   mx.control(MD_MAX72XX::INTENSITY, b);
 }
 

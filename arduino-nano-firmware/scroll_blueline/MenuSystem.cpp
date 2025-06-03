@@ -33,11 +33,18 @@ int tick_duration = 50;
 
 int lcdBrightness = 1;
 
-char* leafScreenName = "";
+char* leafScreenName = NULL;
 
-#define MENU_BRIGHTNESS F("Brightness")
-#define MENU_SPEED F("Speed")
-#define MENU_METHOD F("Select method")
+// #define MENU_BRIGHTNESS F("Brightness")
+// #define MENU_SPEED F("Speed")
+// #define MENU_METHOD F("Select method")
+
+#define MENU_BRIGHTNESS "Brightness"
+#define MENU_SPEED "Speed"
+#define MENU_METHOD "Select method"
+
+// Mac OS USB connection struggles above level 3 (current supply)
+#define MAX_BRIGHTNESS 3
 
 // LCD and encoder setup
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -87,10 +94,10 @@ Menu methodsMenu = {"Method:", methodsMenuItems, ARRAY_LEN(methodsMenuItems)};
 // ---- Now define main menu items (using the submenus above) ----
 char mainTitle[] = {'M', 'e', 't', 'h', 'o', 'd', ' ', 'h', 'y', 'p', 'n', 'o', 's', 'i', 's', '\1'};
 MenuItem mainMenuItems[] = {
-  {"Choose method", &methodsMenu},
-  {"Speed", nullptr},
+  {MENU_METHOD, &methodsMenu},
+  {MENU_SPEED, nullptr},
   // null means a leaf screen with non-menu handling
-  {"Brightness", nullptr}
+  {MENU_BRIGHTNESS, nullptr}
 };
 
 Menu mainMenu = {mainTitle, mainMenuItems, ARRAY_LEN(mainMenuItems)};
@@ -105,25 +112,36 @@ bool buttonPressed = false;
 // unsigned long rotaryDebounceStartTime = 0;
 // unsigned long rotaryDebounceDuration = 100;
 
-bool strcmp_PF(const char* ramString, const __FlashStringHelper* flashString) {
-  char temp[32];  // adjust size to fit longest expected string
-  strncpy_P(temp, (const char*)flashString, sizeof(temp));
-  temp[sizeof(temp) - 1] = '\0';  // ensure null-termination
-  return strcmp(ramString, temp) == 0;
-}
+// bool strcmp_PF(const char* ramString, const __FlashStringHelper* flashString) {
+//   char temp[32];  // adjust size to fit longest expected string
+//   strncpy_P(temp, (const char*)flashString, sizeof(temp));
+//   temp[sizeof(temp) - 1] = '\0';  // ensure null-termination
+//   return strcmp(ramString, temp) == 0;
+// }
 
 void updateMenuDisplay() {
+  PRINT("updateMenuDisplay()");
+
   lcd.clear();
   lcd.setCursor(0, 0);
+
+  PRINT_VAR("Leaf screen name: ", leafScreenName);
+
   // if (!strcmp(leafScreenName, "")) {
-  if (!strcmp_PF(leafScreenName, "")) {
-    if (strcmp_PF(leafScreenName, MENU_BRIGHTNESS)) {
+
+  // if (!strcmp_PF(leafScreenName, "")) {
+  // if (!strcmp(leafScreenName, "")) {
+  if (leafScreenName) {
+    PRINT_VAR("Got into non-empty str bit, leaf = ", leafScreenName);
+    if (!strcmp(leafScreenName, MENU_BRIGHTNESS)) {
+      PRINT(" ... got into BRIGHTNESS");
       lcd.print(F("   Brightness"));
       lcd.setCursor(0, 1);
       lcd.print(F("       "));
       lcd.print(lcdBrightness);
     }
-    else if (strcmp_PF(leafScreenName, MENU_SPEED)) {
+    else if (!strcmp(leafScreenName, MENU_SPEED)) {
+      PRINT(" ... got into SPEED");
       lcd.print(F("   Scroll speed"));
       lcd.setCursor(0, 1);
       lcd.print(F("       "));
@@ -178,8 +196,8 @@ void handleSelection() {
   MenuItem* selected = &currentMenu->items[currentMenuIndex];
 
   // exiting a leaf node?
-  if (leafScreenName != "") {
-    leafScreenName = "";
+  if (leafScreenName != NULL) {
+    leafScreenName = NULL;
   }
   else if (strcmp(selected->label, "Back") == 0 && menuDepth > 0) {
     currentMenu = parentMenus[--menuDepth];
@@ -188,7 +206,7 @@ void handleSelection() {
     Serial.println(currentMenuIndex);
   }
   else if (selected->submenu != nullptr) {
-    Serial.println("BBB into submenu");
+    PRINT("BBB into submenu");
 
     parentMenus[menuDepth++] = currentMenu;
     currentMenu->activeItem = currentMenuIndex;
@@ -196,17 +214,18 @@ void handleSelection() {
     currentMenuIndex = 0;
   }
   else {
-    Serial.print(F("CCC a leaf..."));
-    leafScreenName = selected->label;
+    PRINT("CCC a leaf...");
 
     if (currentMenu == &methodsMenu) {
-      // Serial.println("HAROOOOO! METHOD SEL");
+      PRINT_VAR("HAROOOOO! METHOD SEL: ", currentMenuIndex);
       // TODO need order of method items to match what is defined in scroll_blueino.ino.
       // Fix this properly later.
       setMethodIndex(currentMenuIndex);
-
       // don't attempt to updateMenuDisplay
       return;
+    }
+    else {
+      leafScreenName = selected->label;
     }
     // updateMenuDisplay();
 
@@ -273,7 +292,7 @@ void loop_menu() {
       // leaf screen?
       if (leafScreenName == "Brightness") {
         lcdBrightness += lastRotaryPosition - newRotaryPosition;
-        lcdBrightness = max(min(lcdBrightness, 15), 0);
+        lcdBrightness = max(min(lcdBrightness, MAX_BRIGHTNESS), 0);
         setBrightness(lcdBrightness);
       }
       else if (leafScreenName == "Speed") {

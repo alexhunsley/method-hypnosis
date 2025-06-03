@@ -5,36 +5,38 @@
 
 // Console logging
 
-#define DBG_MEM Serial.print(F("Free mem: ")); Serial.println(freeMemory())
-
 #define ARRAY_LEN(x) (sizeof(x) / sizeof((x)[0]))
 
 // logging helpers, including F variants to put strings in flash not RAM
-// #define PRINTF(str) Serial.print(F(str))
-// #define PRINTFLN(str) Serial.println(F(str))
-// #define PRINT(x) Serial.print(x)
-// #define PRINTLN(x) Serial.println(x)
+#define PRINTF(str) Serial.print(F(str))
+#define PRINTFLN(str) Serial.println(F(str))
+#define PRINT(x) Serial.print(x)
+#define PRINTLN(x) Serial.println(x)
 
-// #define PRINT_VAR(label, value)  \
-//   do {                           \
-//     Serial.print(F(label));      \
-//     Serial.println(value);       \
-//   } while (0)
+#define PRINT_VAR(label, value)  \
+  do {                           \
+    Serial.print(F(label));      \
+    Serial.println(value);       \
+  } while (0)
 
-// #define PRINT_VAR2(label, value, label2)  \
-//   do {                                    \
-//     Serial.print(F(label));               \
-//     Serial.print(value);                  \
-//     Serial.println(F(label2));            \
-//   } while (0)
+#define PRINT_VAR2(label, value, label2)  \
+  do {                                    \
+    Serial.print(F(label));               \
+    Serial.print(value);                  \
+    Serial.println(F(label2));            \
+  } while (0)
 
 // enable these instead of the usual to disable logging and save memory
-#define PRINTF(str)
-#define PRINTFLN(str)
-#define PRINT(x)
-#define PRINTLN(x)
-#define PRINT_VAR(label, value)
-#define PRINT_VAR2(label, value, label2)
+// #define PRINTF(str)
+// #define PRINTFLN(str)
+// #define PRINT(x)
+// #define PRINTLN(x)
+// #define PRINT_VAR(label, value)
+// #define PRINT_VAR2(label, value, label2)
+
+#define DBG_MEM 
+// #define DBG_MEM Serial.print(F("Free mem: ")); Serial.println(freeMemory())
+// #define DBG_MEM PRINT_VAR("Free mem: ", freeMemory())
 
 // inlines must go in .h
 

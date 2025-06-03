@@ -102,17 +102,15 @@ int parse_place_notation_sequence(const char* placeNotation, char placeNotates[]
   // for (int i = 0; i < resultCount; i++) {
   //   PRINTLN(placeNotates[i]);
   // }
-
-  PRINT_VAR("resultCount = ", resultCount);
   return resultCount;
 }
 
 void apply_place_notation(char* row, const char* notation) {
   static bool workingIsPlace[10];
 
-  PRINTFLN("================");
-  PRINT_VAR("Row: ", row);
-  PRINT_VAR("Notation: ", notation);
+  // PRINTFLN("================");
+  // PRINT_VAR("Row: ", row);
+  // PRINT_VAR("Notation: ", notation);
 
   int len = strlen(row);
   memset(workingIsPlace, 0, sizeof(workingIsPlace));
@@ -138,6 +136,6 @@ void apply_place_notation(char* row, const char* notation) {
     i += 2;
   }
   row[i] = '\0';
-  PRINT_VAR("End of PN processing, got row = ", row);
+  // PRINT_VAR("End of PN processing, got row = ", row);
 }
 
