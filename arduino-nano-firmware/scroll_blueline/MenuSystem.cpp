@@ -123,9 +123,10 @@ bool buttonPressed = false;
 #define SCREEN_IDX_BRIGHTNESS 1
 #define SCREEN_IDX_SPEED      2
 
+static int lastDetailScreenIndex = -1;
+static int lastValueSeen = -1;
+
 void updateMenuDisplay() {
-  static int lastDetailScreenIndex = -1;
-  static int lastValueSeen = -1;
 
   PRINT("updateMenuDisplay()");
   
@@ -307,6 +308,7 @@ void loop_menu() {
 
       if (registerActivity()) {
         // ignore selection if display was woken up
+        lastRotaryPosition = newRotaryPosition;
         return;
       }
 
@@ -338,6 +340,9 @@ void loop_menu() {
     lcd.setCursor(0, 0);
     lcd.print(sleepMessage);
     sleepMessageStart = millis();
+    // force redraw on wake up
+    lastDetailScreenIndex = -1;
+    lastValueSeen = -1;
     PRINT("<< DISPLAY about to sleep... >>");
   }
   if (sleepMessageStart > 0 && millis() - sleepMessageStart > sleepMessageDuration) {
