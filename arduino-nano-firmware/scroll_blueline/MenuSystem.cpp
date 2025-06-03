@@ -119,11 +119,18 @@ bool buttonPressed = false;
 //   return strcmp(ramString, temp) == 0;
 // }
 
-void updateMenuDisplay() {
-  PRINT("updateMenuDisplay()");
+#define SCREEN_IDX_MAIN       0
+#define SCREEN_IDX_BRIGHTNESS 1
+#define SCREEN_IDX_SPEED      2
 
-  lcd.clear();
-  lcd.setCursor(0, 0);
+void updateMenuDisplay() {
+  static int lastDetailScreenIndex = -1;
+  static int lastValueSeen = -1;
+
+  PRINT("updateMenuDisplay()");
+  
+  // TODO only update what needs updating here.
+  // e.g. just the value, or even not that, if it was the old value (e.g. brightness clamp)
 
   PRINT_VAR("Leaf screen name: ", leafScreenName);
 
@@ -135,26 +142,49 @@ void updateMenuDisplay() {
     PRINT_VAR("Got into non-empty str bit, leaf = ", leafScreenName);
     if (!strcmp(leafScreenName, MENU_BRIGHTNESS)) {
       PRINT(" ... got into BRIGHTNESS");
-      lcd.print(F("   Brightness"));
-      lcd.setCursor(0, 1);
-      lcd.print(F("       "));
-      lcd.print(lcdBrightness);
+      if (lastDetailScreenIndex != SCREEN_IDX_BRIGHTNESS) {
+        // lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print(F("   Brightness   "));
+      }
+      if (lastDetailScreenIndex != 0 || lastValueSeen != lcdBrightness) {
+        lcd.setCursor(0, 1);
+        // assuming 1 char brightness currently!
+        lcd.print(F("       "));
+        lcd.print(lcdBrightness);
+        lcd.print(F("        "));
+      }
+      lastValueSeen = lcdBrightness;
+      lastDetailScreenIndex = SCREEN_IDX_BRIGHTNESS;
+      return;
     }
     else if (!strcmp(leafScreenName, MENU_SPEED)) {
       PRINT(" ... got into SPEED");
-      lcd.print(F("   Scroll speed"));
+      lcd.setCursor(0, 0);
+      lcd.print(F("  Scroll speed  "));
+      lcd.setCursor(0, 1);
+      lcd.print(F("                "));
       lcd.setCursor(0, 1);
       lcd.print(F("       "));
       lcd.print(tick_duration);
+
+      lastValueSeen = tick_duration;
+      lastDetailScreenIndex = 1;
     }
     return;
   }
 
-  // lcd.write((uint8_t)1); // to add bell char
+  // if (strcmp(lastScreenTitle, currentMenu->title)) { //} != 0 || lastValueSeen != lcdBrightness) {
+    // lcd.write((uint8_t)1); // to add bell char
+  PRINT_VAR("Current menu title: ", currentMenu->title);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
   lcd.print(currentMenu->title);
   lcd.setCursor(0, 1);
   lcd.print(F("> "));
   lcd.print(currentMenu->items[currentMenuIndex].label);
+  // }
 }
 
 ///////////////////////////////////////////////
